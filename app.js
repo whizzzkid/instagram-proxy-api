@@ -20,7 +20,7 @@ let InstaProxy = {};
 
 // Constants
 InstaProxy.SERVER_PORT = 3000;
-
+InstaProxy.PROTOCOL = 'https';
 
 /**
  * A simple logging function for consistency.
@@ -64,17 +64,19 @@ InstaProxy.reconstructJSON = function (request, json) {
     delete request.query['max_id'];
     delete request.query['min_id'];
 
-    // just copying.
-    var query = Object.assign({}, request.query);
-    query['max_id'] = json.items[json.items.length - 1]['id'];
-    json['next'] = this.constructURL(
-        request.protocol, request.get('host'), request.path, query);
+    var query = {};
 
     // just copying.
-    var query = Object.assign({}, request.query);
+    query = Object.assign({}, request.query);
+    query['max_id'] = json.items[json.items.length - 1]['id'];
+    json['next'] = this.constructURL(
+        this.PROTOCOL, request.get('host'), request.path, query);
+
+    // just copying.
+    query = Object.assign({}, request.query);
     query['min_id'] = json.items[0]['id'];
     json['previous'] = this.constructURL(
-        request.protocol, request.get('host'), request.path, query);
+        this.PROTOCOL, request.get('host'), request.path, query);
   }
   return json;
 };
@@ -120,7 +122,7 @@ InstaProxy.buildInstagramHandlerCallback = function (request, response) {
 InstaProxy.fetchFromInstagram = function (user, request, response) {
   https.get(
     this.constructURL(
-      'https', 'www.instagram.com', '/' + user + '/media/', request.query),
+      this.PROTOCOL, 'www.instagram.com', '/' + user + '/media/', request.query),
     this.buildInstagramHandlerCallback(request, response).bind(this));
 };
 
@@ -153,6 +155,7 @@ InstaProxy.noContent = function (request, response) {
 InstaProxy.setUpRoutes = function () {
   this.log('Setting up routes.')
   this.app.get('/favicon.ico', this.noContent);
+  this.app.get('/apple-touch-icon.png', this.noContent);
   this.app.get('/:user/media/', this.processRequest.bind(this));
 };
 
