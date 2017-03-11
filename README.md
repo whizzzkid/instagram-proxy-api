@@ -5,7 +5,7 @@
 [![Code Climate](https://lima.codeclimate.com/github/whizzzkid/instagram-reverse-proxy/badges/gpa.svg)](https://lima.codeclimate.com/github/whizzzkid/instagram-reverse-proxy)
 [![Issue Count](https://lima.codeclimate.com/github/whizzzkid/instagram-reverse-proxy/badges/issue_count.svg)](https://lima.codeclimate.com/github/whizzzkid/instagram-reverse-proxy)
 
-This builds over the Instagram's public API to provide more functionality and provides a CORS complaint reverse instagram proxy service
+This builds over the Instagram's public API to provide more functionality and provides a CORS complaint reverse instagram proxy service. Try Here: [https://instareproxy.herokuapp.com/whizzzkid/media/?count=3](https://instareproxy.herokuapp.com/whizzzkid/media/?count=3)
 
 ## The Problem.
 
@@ -17,7 +17,7 @@ A user's public data on Instagram can be accessed on `https://www.instagram.com/
   
 ## The Solution
 
-As of now, the service is running on `https://instareproxy.herokuapp.com/` I am not aware about limits, it's basically running on free tier. If it hits any limit, I'll have to figure that out. But the intended use is to replace `http://www.instagram.com` with `https://instareproxy.herokuapp.com/`.
+As of now, the service is running on [https://instareproxy.herokuapp.com/](https://instareproxy.herokuapp.com/) I am not aware about limits, it's basically running on free tier. If it hits any limit, I'll have to figure that out. But the intended use is to replace `http://www.instagram.com` with `https://instareproxy.herokuapp.com/`.
 
 ## Accessing Data
 
