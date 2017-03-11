@@ -57,26 +57,29 @@ InstaProxy.constructURL = function (protocol, host, path, query) {
  * @return {object} new data as per query.
  */
 InstaProxy.reconstructJSON = function (request, json) {
-  if ('items' in json) {
+  if ('items' in json && json.items.length > 0) {
+    var itemsAvailable = json.items.length;
     if ('count' in request.query) {
       json.items = json.items.slice(0, parseInt(request.query.count));
     }
-    delete request.query['max_id'];
-    delete request.query['min_id'];
+    if (json.more_available || itemsAvailable > request.query.count) {
+      delete request.query['max_id'];
+      delete request.query['min_id'];
 
-    var query = {};
+      var query = {};
 
-    // just copying.
-    query = Object.assign({}, request.query);
-    query['max_id'] = json.items[json.items.length - 1]['id'];
-    json['next'] = this.constructURL(
+      // just copying.
+      query = Object.assign({}, request.query);
+      query['max_id'] = json.items[json.items.length - 1]['id'];
+      json['next'] = this.constructURL(
         this.PROTOCOL, request.get('host'), request.path, query);
 
-    // just copying.
-    query = Object.assign({}, request.query);
-    query['min_id'] = json.items[0]['id'];
-    json['previous'] = this.constructURL(
+      // just copying.
+      query = Object.assign({}, request.query);
+      query['min_id'] = json.items[0]['id'];
+      json['previous'] = this.constructURL(
         this.PROTOCOL, request.get('host'), request.path, query);
+    }
   }
   return json;
 };
