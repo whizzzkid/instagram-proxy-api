@@ -47,7 +47,7 @@ InstaProxy.constructURL = function (protocol, host, path, query) {
     'pathname': path,
     'query': query
   });
-}
+};
 
 
 /**
@@ -122,7 +122,7 @@ InstaProxy.fetchFromInstagram = function (user, request, response) {
     this.constructURL(
       'https', 'www.instagram.com', '/' + user + '/media/', request.query),
     this.buildInstagramHandlerCallback(request, response).bind(this));
-}
+};
 
 
 /**
