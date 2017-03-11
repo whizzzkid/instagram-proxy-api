@@ -43,6 +43,10 @@ You just need to replace `http://www.instagram.com/` with `https://instareproxy.
 
 NO AUTH required, that's the best part, you can access all of instagram's public data without authentication or registering an app.
 
+## Inspiration
+
+The idea came into being after some discussion [here](http://stackoverflow.com/a/33783840).
+
 ## Issues & Pull Requests
 
 All contributers are welcome, feel free to report issues and send PRs
