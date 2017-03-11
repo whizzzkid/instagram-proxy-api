@@ -143,7 +143,7 @@ InstaProxy.processRequest = function (request, response) {
  * @param {object} response
  */
 InstaProxy.noContent = function (request, response) {
-  response.sendStatus(204);
+  response.send(204);
 };
 
 
