@@ -62,7 +62,7 @@ InstaProxy.reconstructJSON = function (request, json) {
 
     // Limiting number of posts as per count parameter.
     if ('count' in request.query) {
-      json.items = json.items.slice(0, parseInt(request.query.count));
+      json.items = json.items.slice(0, parseInt(request.query.count, 10));
     }
 
     // We only need to show next page if we have posts available.
