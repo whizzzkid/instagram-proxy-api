@@ -20,7 +20,7 @@ let InstaProxy = {};
 
 // Constants
 InstaProxy.SERVER_PORT = 3000;
-InstaProxy.PROTOCOL = 'https';
+InstaProxy.PROTOCOL = (process.env.NODE_ENV === 'prod') ? 'https' : 'http';
 
 /**
  * A simple logging function for consistency.
@@ -59,10 +59,14 @@ InstaProxy.constructURL = function (protocol, host, path, query) {
 InstaProxy.reconstructJSON = function (request, json) {
   if ('items' in json && json.items.length > 0) {
     var itemsAvailable = json.items.length;
+
+    // Limiting number of posts as per count parameter.
     if ('count' in request.query) {
       json.items = json.items.slice(0, parseInt(request.query.count));
     }
-    if (json.more_available || itemsAvailable > request.query.count) {
+
+    // We only need to show next page if we have posts available.
+    if (json.items.length > 0) {
       delete request.query['max_id'];
       delete request.query['min_id'];
 
@@ -125,7 +129,7 @@ InstaProxy.buildInstagramHandlerCallback = function (request, response) {
 InstaProxy.fetchFromInstagram = function (user, request, response) {
   https.get(
     this.constructURL(
-      this.PROTOCOL, 'www.instagram.com', '/' + user + '/media/', request.query),
+      'https', 'www.instagram.com', '/' + user + '/media/', request.query),
     this.buildInstagramHandlerCallback(request, response).bind(this));
 };
 

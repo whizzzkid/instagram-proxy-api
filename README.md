@@ -14,7 +14,7 @@ A user's public data on Instagram can be accessed on `https://www.instagram.com/
   1. The Service is not CORS compliant. i.e. You cannot fetch json directly and the services refuses to send you jsonp data.
   1. It does not support limiting the amount of data being sent. At any moment Instagram will send you 20 images, you cannot control this number.
   1. No pagination support. It get's you the first 20 images and leaves you in the dark to figure out what to do next.
-  
+
 ## The Solution
 
 As of now, the service is running on [https://instareproxy.herokuapp.com/](https://instareproxy.herokuapp.com/) I am not aware about limits, it's basically running on free tier. If it hits any limit, I'll have to figure that out. But the intended use is to replace `http://www.instagram.com` with `https://instareproxy.herokuapp.com/`.
@@ -22,30 +22,48 @@ As of now, the service is running on [https://instareproxy.herokuapp.com/](https
 ## Accessing Data
 
   * Getting Instagrams's data as is. The following will give you access to the same data instagram provides.
-    
+
     `https://instareproxy.herokuapp.com/<user>/media/`
 
   * Limiting the amount of images to be sent.
-    
+
     `https://instareproxy.herokuapp.com/<user>/media/?count=10`
-  
+
   * Using jsonp
-    
+
     `https://instareproxy.herokuapp.com/<user>/media/?callback=foo`
-  
+
   * Using pagination: Each response has url links to the next and previous page, you can use that to traverse through the results.
-  
+
 ## Integration
 
 You just need to replace `http://www.instagram.com/` with `https://instareproxy.herokuapp.com/` and everything should just work as is.
 
 ## Authentication
 
-NO AUTH required, that's the best part, you can access all of instagram's public data without authentication or registering an app.
+NO AUTH REQUIRED, that's the best part, you can access all of instagram's public data without authentication or registering an app. Private data returns nothing. However private data maybe accessible using instagram's api if the user is logged in.
+
+    # The following returns data *only* if the user is logged in.
+    https://www.instagram.com/<private_user>/media/
+
+    # The following will always return nothing for private users.
+    https://instareproxy.herokuapp.com/<private_user>/media/
+
+## Running on local
+
+Clone the repo and change to the cloned directory. Run:
+
+    $ npm install
+    $ npm run dev
+
+To run prod instance, run:
+
+    $ npm run prod
+
 
 ## Inspiration
 
-The idea came into being after some discussion [here](http://stackoverflow.com/a/33783840).
+The idea came into being after reading some discussion [here](http://stackoverflow.com/a/33783840).
 
 ## Issues & Pull Requests
 
