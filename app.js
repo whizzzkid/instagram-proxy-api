@@ -27,10 +27,9 @@ InstaProxy.PROTOCOL = (process.env.NODE_ENV === 'prod') ? 'https' : 'http';
  * @param {string} msg
  */
 InstaProxy.log = function (msg) {
-  var time = new Date();
+  let time = new Date();
   console.log('[' + time.toString() + '] ' + msg);
 };
-
 
 /**
  * Constructs New Url
@@ -42,13 +41,9 @@ InstaProxy.log = function (msg) {
  */
 InstaProxy.constructURL = function (protocol, host, path, query) {
   return url.format({
-    'protocol': protocol,
-    'host': host,
-    'pathname': path,
-    'query': query
+    'protocol': protocol, 'host': host, 'pathname': path, 'query': query
   });
 };
-
 
 /**
  * Reconstructs JSON as per query parameters.
@@ -58,7 +53,7 @@ InstaProxy.constructURL = function (protocol, host, path, query) {
  */
 InstaProxy.reconstructJSON = function (request, json) {
   if ('items' in json && json.items.length > 0) {
-    var itemsAvailable = json.items.length;
+    let itemsAvailable = json.items.length;
 
     // Limiting number of posts as per count parameter.
     if ('count' in request.query) {
@@ -70,24 +65,23 @@ InstaProxy.reconstructJSON = function (request, json) {
       delete request.query['max_id'];
       delete request.query['min_id'];
 
-      var query = {};
+      let query = {};
 
       // just copying.
       query = Object.assign({}, request.query);
       query['max_id'] = json.items[json.items.length - 1]['id'];
       json['next'] = this.constructURL(
-        this.PROTOCOL, request.get('host'), request.path, query);
+          this.PROTOCOL, request.get('host'), request.path, query);
 
       // just copying.
       query = Object.assign({}, request.query);
       query['min_id'] = json.items[0]['id'];
       json['previous'] = this.constructURL(
-        this.PROTOCOL, request.get('host'), request.path, query);
+          this.PROTOCOL, request.get('host'), request.path, query);
     }
   }
   return json;
 };
-
 
 /**
  * Handles JSON data fetched from Instagram.
@@ -99,7 +93,6 @@ InstaProxy.handleInstagramJSON = function (request, response, json) {
   response.jsonp(this.reconstructJSON(request, json));
 };
 
-
 /**
  * Builds the callback function for handling Instagram response.
  * @param {object} request
@@ -109,16 +102,20 @@ InstaProxy.handleInstagramJSON = function (request, response, json) {
 InstaProxy.buildInstagramHandlerCallback = function (request, response) {
   return function (serverResponse) {
     serverResponse.setEncoding('utf8');
-    var body = '';
+    let body = '';
     serverResponse.on('data', function (chunk) {
       body += chunk;
     });
     serverResponse.on('end', function () {
-      this.handleInstagramJSON(request, response, JSON.parse(body));
+      try {
+        let json = JSON.parse(body);
+        this.handleInstagramJSON(request, response, json);
+      } catch (error) {
+        response.status(404).send('Invalid User').end();
+      }
     }.bind(this));
   };
 };
-
 
 /**
  * Fetches content from Instagram API.
@@ -133,18 +130,16 @@ InstaProxy.fetchFromInstagram = function (user, request, response) {
     this.buildInstagramHandlerCallback(request, response).bind(this));
 };
 
-
 /**
  * Processing User Request. This works the same way as instagram API.
  * @param {object} request
  * @param {object} response
  */
 InstaProxy.processRequest = function (request, response) {
-    var user = request.params.user;
-    this.log('Processing User: ' + user + ' ' + JSON.stringify(request.query));
-    this.fetchFromInstagram(user, request, response);
+  let user = request.params.user;
+  this.log('Processing User: ' + user + ' ' + JSON.stringify(request.query));
+  this.fetchFromInstagram(user, request, response);
 };
-
 
 /**
  * Sends no content as response.
@@ -152,7 +147,16 @@ InstaProxy.processRequest = function (request, response) {
  * @param {object} response
  */
 InstaProxy.noContent = function (request, response) {
-  response.send(204);
+  response.status(204).end();
+};
+
+/**
+ * Sends User to project repo.
+ * @param {object} request
+ * @param {object} response
+ */
+InstaProxy.sendToRepo = function (request, response) {
+  response.redirect('https://github.com/whizzzkid/instagram-reverse-proxy');
 };
 
 
@@ -160,12 +164,12 @@ InstaProxy.noContent = function (request, response) {
  * Sets up app routes.
  */
 InstaProxy.setUpRoutes = function () {
-  this.log('Setting up routes.')
+  this.log('Setting up routes.');
   this.app.get('/favicon.ico', this.noContent);
   this.app.get('/apple-touch-icon.png', this.noContent);
   this.app.get('/:user/media/', this.processRequest.bind(this));
+  this.app.get('*', this.sendToRepo);
 };
-
 
 /**
  * Run server.
@@ -174,7 +178,6 @@ InstaProxy.serve = function () {
   this.log('Starting server.');
   this.app.listen(process.env.PORT || this.SERVER_PORT);
 };
-
 
 /**
  * Init Method.
@@ -186,5 +189,5 @@ InstaProxy.init = function () {
   this.serve();
 };
 
-// Init
+// Init.
 InstaProxy.init();
