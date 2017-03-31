@@ -5,7 +5,7 @@
 [![Code Climate](https://lima.codeclimate.com/github/whizzzkid/instagram-reverse-proxy/badges/gpa.svg)](https://lima.codeclimate.com/github/whizzzkid/instagram-reverse-proxy)
 [![Issue Count](https://lima.codeclimate.com/github/whizzzkid/instagram-reverse-proxy/badges/issue_count.svg)](https://lima.codeclimate.com/github/whizzzkid/instagram-reverse-proxy)
 
-This builds over the Instagram's public API to provide more functionality and provides a CORS complaint reverse instagram proxy service. Try Here: [https://instareproxy.herokuapp.com/whizzzkid/media/?count=3](https://instareproxy.herokuapp.com/whizzzkid/media/?count=3)
+This builds over the Instagram's public API to provide more functionality and provides a CORS complaint reverse instagram proxy service. Try Here: [https://igapi.ga/whizzzkid/media/?count=3](https://igapi.ga/whizzzkid/media/?count=3)
 
 ## The Problem.
 
@@ -17,27 +17,27 @@ A user's public data on Instagram can be accessed on `https://www.instagram.com/
 
 ## The Solution
 
-As of now, the service is running on [https://instareproxy.herokuapp.com/](https://instareproxy.herokuapp.com/) I am not aware about limits, it's basically running on free tier. If it hits any limit, I'll have to figure that out. But the intended use is to replace `http://www.instagram.com` with `https://instareproxy.herokuapp.com/`.
+As of now, the service is running on [https://igapi.ga/](https://igapi.ga/)(Heroku) I am not aware about limits, it's basically running on free tier. If it hits any limit, I'll have to figure that out. But the intended use is to replace `http://www.instagram.com` with `https://igapi.ga/`.
 
 ## Accessing Data
 
   * Getting Instagrams's data as is. The following will give you access to the same data instagram provides.
 
-    `https://instareproxy.herokuapp.com/<user>/media/`
+    `https://igapi.ga/<user>/media/`
 
   * Limiting the amount of images to be sent.
 
-    `https://instareproxy.herokuapp.com/<user>/media/?count=10`
+    `https://igapi.ga/<user>/media/?count=10`
 
   * Using jsonp
 
-    `https://instareproxy.herokuapp.com/<user>/media/?callback=foo`
+    `https://igapi.ga/<user>/media/?callback=foo`
 
   * Using pagination: Each response has url links to the next and previous page, you can use that to traverse through the results.
 
 ## Integration
 
-You just need to replace `http://www.instagram.com/` with `https://instareproxy.herokuapp.com/` and everything should just work as is.
+You just need to replace `http://www.instagram.com/` with `https://igapi.ga/` and everything should just work as is.
 
 ## Authentication
 
@@ -47,7 +47,7 @@ NO AUTH REQUIRED, that's the best part, you can access all of instagram's public
     https://www.instagram.com/<private_user>/media/
 
     # The following will always return nothing for private users.
-    https://instareproxy.herokuapp.com/<private_user>/media/
+    https://igapi.ga/<private_user>/media/
 
 ## Running on local
 
