@@ -7,6 +7,8 @@
 
 This builds over the Instagram's public API to provide more functionality and provides a CORS complaint reverse instagram proxy service. Try Here: [https://igapi.ga/whizzzkid/media/?count=3](https://igapi.ga/whizzzkid/media/?count=3)
 
+**Read Blog Post: [https://nishantarora.in/building-your-image-gallery-using-public-instagram-API.naml](https://nishantarora.in/building-your-image-gallery-using-public-instagram-API.naml)**
+
 ## The Problem.
 
 A user's public data on Instagram can be accessed on `https://www.instagram.com/<user>/media/` but there are are a lot of problems with this service.
