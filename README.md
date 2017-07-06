@@ -73,4 +73,6 @@ All contributers are welcome, feel free to report issues and send PRs
 
 ## License
 
-GPLv3
+Source Code: GPLv3
+
+Service hosted on https://igapi.ga or https://instareproxy.herokuapp.com will be free only for personal use (i.e. personal blogs/personal websites/personal portfolios). If any other website intends to use this service for any purpose can send me an email to **me@nishantarora.in** to discuss more about this (Please include your domain, expected traffic and purpose). Failing to do so will lead to disabled access from this service.

@@ -137,7 +137,9 @@ InstaProxy.fetchFromInstagram = function (user, request, response) {
  */
 InstaProxy.processRequest = function (request, response) {
   let user = request.params.user;
-  this.log('Processing User: ' + user + ' ' + JSON.stringify(request.query));
+  this.log('Processing [User:"' + user + '", ' +
+    'Query:"' + JSON.stringify(request.query) + ', ' +
+    'Referrer:"' + request.headers.referer) + '"';
   this.fetchFromInstagram(user, request, response);
 };
 
