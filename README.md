@@ -76,3 +76,11 @@ All contributers are welcome, feel free to report issues and send PRs
 Source Code: GPLv3
 
 Service hosted on https://igapi.ga or https://instareproxy.herokuapp.com will be free only for personal use (i.e. personal blogs/personal websites/personal portfolios). If any other website intends to use this service for any purpose can send me an email to **me@nishantarora.in** to discuss more about this (Please include your domain, expected traffic and purpose). Failing to do so will lead to disabled access from this service.
+
+## Update Jul 06, 2017: Over 300,000 requests served in last 30 days :)
+
+The logs have gone wild, the sheer number of requests are amazing for this service is running on the free heroku tier. In the last 30 days we have serviced more than 300,000 requests to this API. Check this graph out:
+
+![Imgur](http://i.imgur.com/vAorSPR.png)
+
+At first I was surprized with this number and was inclined towards thinking that someone was trying to scrape instagram using this API. Turns out I was wrong, a really popular asian website is using this service on their website. I am in talks with them to move this traffic to a dedicated separate instance of this service.
