@@ -151,16 +151,14 @@ InstaProxy.processRequest = function (request, response) {
   let referer = request.headers.referer;
   this.log('Processing [User:"' + user + '", ' +
     'Query:"' + JSON.stringify(request.query) + ', ' +
-    'Referrer:"' + referer + '"');
+    'Referer:"' + referer + '"]');
   if (referer != null) {
-    if (url.parse(referer).hostname in this.REFERRER_BLACKLIST) {
+    if (this.REFERRER_BLACKLIST.indexOf(url.parse(referer).hostname) != -1) {
       this.log('Denying access to request from: ' + referer);
       this.accessDenied(request, response);
     }
-  } else {
-    // Probably people are hitting the api just to test it
-    this.fetchFromInstagram(user, request, response);
   }
+  this.fetchFromInstagram(user, request, response);
 };
 
 
