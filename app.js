@@ -151,9 +151,9 @@ InstaProxy.processRequest = function (request, response) {
   let referer = request.headers.referer;
   this.log('Processing [User:"' + user + '", ' +
     'Query:"' + JSON.stringify(request.query) + ', ' +
-    'Referrer:"' + referer) + '"';
+    'Referrer:"' + referer + '"');
   if (referer != null) {
-    if (this.REFERRER_BLACKLIST.indexOf(url.parse(referer).hostname) != -1) {
+    if (url.parse(referer).hostname in this.REFERRER_BLACKLIST) {
       this.log('Denying access to request from: ' + referer);
       this.accessDenied(request, response);
     }
