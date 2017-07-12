@@ -21,6 +21,11 @@ let InstaProxy = {};
 // Constants
 InstaProxy.SERVER_PORT = 3000;
 InstaProxy.PROTOCOL = (process.env.NODE_ENV === 'prod') ? 'https' : 'http';
+InstaProxy.REFERRER_BLACKLIST = [
+  'https://www.bnk48.com',
+  'https://likedike.com'
+];
+
 
 /**
  * A simple logging function for consistency.
@@ -30,6 +35,7 @@ InstaProxy.log = function (msg) {
   let time = new Date();
   console.log('[' + time.toString() + '] ' + msg);
 };
+
 
 /**
  * Constructs New Url
@@ -44,6 +50,7 @@ InstaProxy.constructURL = function (protocol, host, path, query) {
     'protocol': protocol, 'host': host, 'pathname': path, 'query': query
   });
 };
+
 
 /**
  * Reconstructs JSON as per query parameters.
@@ -83,6 +90,7 @@ InstaProxy.reconstructJSON = function (request, json) {
   return json;
 };
 
+
 /**
  * Handles JSON data fetched from Instagram.
  * @param {object} request
@@ -92,6 +100,7 @@ InstaProxy.reconstructJSON = function (request, json) {
 InstaProxy.handleInstagramJSON = function (request, response, json) {
   response.jsonp(this.reconstructJSON(request, json));
 };
+
 
 /**
  * Builds the callback function for handling Instagram response.
@@ -117,6 +126,7 @@ InstaProxy.buildInstagramHandlerCallback = function (request, response) {
   };
 };
 
+
 /**
  * Fetches content from Instagram API.
  * @param {string} user
@@ -130,6 +140,7 @@ InstaProxy.fetchFromInstagram = function (user, request, response) {
     this.buildInstagramHandlerCallback(request, response).bind(this));
 };
 
+
 /**
  * Processing User Request. This works the same way as instagram API.
  * @param {object} request
@@ -137,11 +148,30 @@ InstaProxy.fetchFromInstagram = function (user, request, response) {
  */
 InstaProxy.processRequest = function (request, response) {
   let user = request.params.user;
+  let referer = request.headers.referer;
   this.log('Processing [User:"' + user + '", ' +
     'Query:"' + JSON.stringify(request.query) + ', ' +
-    'Referrer:"' + request.headers.referer) + '"';
-  this.fetchFromInstagram(user, request, response);
+    'Referrer:"' + referer) + '"';
+  if (request.headers.referer != null &&
+      this.REFERRER_BLACKLIST.indexOf(url.parse(referer).hostname) == -1) {
+        this.fetchFromInstagram(user, request, response);
+  } else {
+
+  }
+
 };
+
+
+/**
+ * Access Denied.
+ * @param {object} request
+ * @param {object} response
+ */
+InstaProxy.accessDenied = function (request, response) {
+  response.status(403).end(
+    'Your website is blackListed. Contact me@nishantarora.in for more info.');
+};
+
 
 /**
  * Sends no content as response.
@@ -151,6 +181,7 @@ InstaProxy.processRequest = function (request, response) {
 InstaProxy.noContent = function (request, response) {
   response.status(204).end();
 };
+
 
 /**
  * Sends User to project repo.
@@ -173,6 +204,7 @@ InstaProxy.setUpRoutes = function () {
   this.app.get('*', this.sendToRepo);
 };
 
+
 /**
  * Run server.
  */
@@ -180,6 +212,7 @@ InstaProxy.serve = function () {
   this.log('Starting server.');
   this.app.listen(process.env.PORT || this.SERVER_PORT);
 };
+
 
 /**
  * Init Method.
