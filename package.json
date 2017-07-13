@@ -4,9 +4,9 @@
   "description": "Provides an API layer over Instagram's public API.",
   "main": "app.js",
   "scripts": {
-    "start": "NODE_ENV=prod node app.js",
+    "start": "set NODE_ENV=prod && node app.js",
     "prod": "npm start",
-    "dev": "NODE_ENV=dev node app.js",
+    "dev": "set NODE_ENV=dev && node app.js",
     "test": "echo \"Dummy Tests Pass\""
   },
   "engines": {
