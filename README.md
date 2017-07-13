@@ -19,27 +19,27 @@ A user's public data on Instagram can be accessed on `https://www.instagram.com/
 
 ## The Solution
 
-As of now, the service is running on [https://igpi.ga/](https://igpi.ga/)(Heroku) I am not aware about limits, it's basically running on free tier. If it hits any limit, I'll have to figure that out. But the intended use is to replace `http://www.instagram.com` with `https://igpi.ga/`.
+As of now, the service is running on [https://igpi.ga/](https://igpi.ga/)(Heroku) I am not aware about limits, it's basically running on free tier. If it hits any limit, I'll have to figure that out. But the intended use is to replace `http://www.instagram.com` with `https://igpi.ga/` or `https://igapi.ga/`.
 
 ## Accessing Data
 
   * Getting Instagrams's data as is. The following will give you access to the same data instagram provides.
 
-    `https://igpi.ga/<user>/media/`
+    `https://igpi.ga/<user>/media/` or `https://igapi.ga/<user>/media/`
 
   * Limiting the amount of images to be sent.
 
-    `https://igpi.ga/<user>/media/?count=10`
+    `https://igpi.ga/<user>/media/?count=10` or `https://igapi.ga/<user>/media/?count=10`
 
   * Using jsonp
 
-    `https://igpi.ga/<user>/media/?callback=foo`
+    `https://igpi.ga/<user>/media/?callback=foo` or `https://igapi.ga/<user>/media/?callback=foo` 
 
   * Using pagination: Each response has url links to the next and previous page, you can use that to traverse through the results.
 
 ## Integration
 
-You just need to replace `http://www.instagram.com/` with `https://igpi.ga/` and everything should just work as is.
+You just need to replace `http://www.instagram.com/` with `https://igpi.ga/` or `https://igapi.ga/` and everything should just work as is.
 
 ## Authentication
 
@@ -75,7 +75,7 @@ All contributers are welcome, feel free to report issues and send PRs
 
 Source Code: GPLv3
 
-Service hosted on https://igpi.ga or https://instareproxy.herokuapp.com will be free only for personal use (i.e. personal blogs/personal websites/personal portfolios). If any other website intends to use this service for any purpose can send me an email to **me@nishantarora.in** to discuss more about this (Please include your domain, expected traffic and purpose). Failing to do so will lead to disabled access from this service.
+Service hosted on https://igpi.ga or https://igapi.ga or any heroku instance used in running these services, will be free only for personal use (i.e. personal blogs/personal websites/personal portfolios). If any other entity intends to use this service for any other purpose, please send an email to **me@nishantarora.in** to discuss more about this (Please include your domain, expected traffic and purpose). Failing to do so will lead to [blacklisting from this service](https://github.com/whizzzkid/instagram-reverse-proxy/blob/master/app.js#L24).
 
 ## Update Jul 06, 2017: Over 300,000 requests served in last 30 days :)
 
