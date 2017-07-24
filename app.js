@@ -23,7 +23,8 @@ InstaProxy.SERVER_PORT = 3000;
 InstaProxy.PROTOCOL = (process.env.NODE_ENV === 'prod') ? 'https' : 'http';
 InstaProxy.REFERER_BLACKLIST = [
   'www.bnk48.com',
-  'likedike.com'
+  'likedike.com',
+  'flowerwholesale.com'
 ];
 
 
@@ -149,11 +150,11 @@ InstaProxy.fetchFromInstagram = function (user, request, response) {
 InstaProxy.processRequest = function (request, response) {
   let user = request.params.user;
   let referer = request.headers.referer;
-  this.log('Processing [User:"' + user + '", ' +
-    'Query:"' + JSON.stringify(request.query) + ', ' +
-    'Referer:"' + referer + '"]');
   if (referer == undefined || referer == 'undefined' ||
       this.REFERER_BLACKLIST.indexOf(url.parse(referer).hostname) == -1) {
+    this.log('Processing [User:"' + user + '", ' +
+             'Query:"' + JSON.stringify(request.query) + ', ' +
+             'Referer:"' + referer + '"]');
     this.fetchFromInstagram(user, request, response);
   } else {
     this.log('Denying access to request from: ' + referer);
