@@ -21,13 +21,16 @@ let InstaProxy = {};
 // Constants
 InstaProxy.SERVER_PORT = 3000;
 InstaProxy.PROTOCOL = (process.env.NODE_ENV === 'prod') ? 'https' : 'http';
-InstaProxy.REFERER_BLACKLIST = [
-  'www.bnk48.com',
-  'likedike.com',
-  'flowerwholesale.com',
-  'flowers.darwinapps.com',
-  'darwinapps.com'
-];
+InstaProxy.REFERER_BLACKLIST = 'www.bnk48.com' +
+  'www.likedike.com' +
+  'www.flowerwholesale.com' +
+  'www.flowers.darwinapps.com' +
+  'www.darwinapps.com' +
+  'www.potomacfloralwholesale.com' +
+  'www.estacaodaluz.com.br' +
+  'www.leonidasoy.fi' +
+  'www.social.mplaeleicoes2017.com' +
+'';
 
 
 /**
