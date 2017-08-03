@@ -30,6 +30,7 @@ InstaProxy.REFERER_BLACKLIST = 'www.bnk48.com' +
   'www.estacaodaluz.com.br' +
   'www.leonidasoy.fi' +
   'www.social.mplaeleicoes2017.com' +
+  'www.ofuturocomcerteza.pt' +
 '';
 
 
