@@ -157,8 +157,8 @@ InstaProxy.fetchFromInstagram = function (user, request, response) {
 InstaProxy.processRequest = function (request, response) {
   let user = request.params.user;
   let referer = request.headers.referer;
-  if (referer == undefined || referer == 'undefined' ||
-      this.REFERER_BLACKLIST.indexOf(url.parse(referer).hostname) == -1) {
+  if (referer === undefined || referer === 'undefined' ||
+      this.REFERER_BLACKLIST.indexOf(url.parse(referer).hostname) === -1) {
     this.log('Processing [User:"' + user + '", ' +
              'Query:"' + JSON.stringify(request.query) + ', ' +
              'Referer:"' + referer + '"]');
