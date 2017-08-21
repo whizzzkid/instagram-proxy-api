@@ -14,6 +14,7 @@
 const https = require('https');
 const express = require('express');
 const url = require('url');
+const cors = require('cors');
 
 // App Namespace.
 let InstaProxy = {};
@@ -207,7 +208,7 @@ InstaProxy.setUpRoutes = function () {
   this.log('Setting up routes.');
   this.app.get('/favicon.ico', this.noContent);
   this.app.get('/apple-touch-icon.png', this.noContent);
-  this.app.get('/:user/media/', this.processRequest.bind(this));
+  this.app.get('/:user/media/', cors(), this.processRequest.bind(this));
   this.app.get('*', this.sendToRepo);
 };
 
