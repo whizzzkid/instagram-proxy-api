@@ -11,10 +11,12 @@
 'use strict';
 
 // Imports.
-const https = require('https');
-const express = require('express');
-const url = require('url');
+const bloom = require('bloomxx');
 const cors = require('cors');
+const express = require('express');
+const https = require('https');
+const parseDomain = require('parse-domain');
+const url = require('url');
 
 // App Namespace.
 let InstaProxy = {};
@@ -22,17 +24,22 @@ let InstaProxy = {};
 // Constants
 InstaProxy.SERVER_PORT = 3000;
 InstaProxy.PROTOCOL = (process.env.NODE_ENV === 'prod') ? 'https' : 'http';
-InstaProxy.REFERER_BLACKLIST = 'www.bnk48.com' +
-  'www.likedike.com' +
-  'www.flowerwholesale.com' +
-  'www.flowers.darwinapps.com' +
-  'www.darwinapps.com' +
-  'www.potomacfloralwholesale.com' +
-  'www.estacaodaluz.com.br' +
-  'www.leonidasoy.fi' +
-  'www.social.mplaeleicoes2017.com' +
-  'www.ofuturocomcerteza.pt' +
-'';
+InstaProxy.REFERER_DOMAIN_BLACKLIST = [
+  'bnk48',
+  'likedike',
+  'flowerwholesale',
+  'darwinapps',
+  'potomacfloralwholesale.com',
+  'estacaodaluz',
+  'leonidasoy',
+  'mplaeleicoes2017',
+  'ofuturocomcerteza',
+  'centraldacorrida',
+  'bloodandco',
+  'likes',
+  'pressingprive',
+  
+];
 
 
 /**
@@ -157,8 +164,9 @@ InstaProxy.fetchFromInstagram = function (user, request, response) {
 InstaProxy.processRequest = function (request, response) {
   let user = request.params.user;
   let referer = request.headers.referer;
-  if (referer === undefined || referer === 'undefined' ||
-      this.REFERER_BLACKLIST.indexOf(url.parse(referer).hostname) === -1) {
+  if (referer === undefined ||
+      referer === 'undefined' ||
+      !this.filter.has(parseDomain(referer).domain)) {
     this.log('Processing [User:"' + user + '", ' +
              'Query:"' + JSON.stringify(request.query) + ', ' +
              'Referer:"' + referer + '"]');
@@ -202,6 +210,18 @@ InstaProxy.sendToRepo = function (request, response) {
 
 
 /**
+ * Bloom Filter implementation for blacklisting domains.
+ */
+InstaProxy.setUpFilter = function () {
+  this.log('Setting Up Filters');
+  this.filter = bloom.BloomFilter.createOptimal(this.REFERER_DOMAIN_BLACKLIST.length);
+  for (var i in this.REFERER_DOMAIN_BLACKLIST) {
+    this.filter.add(this.REFERER_DOMAIN_BLACKLIST[i]);
+  }
+};
+
+
+/**
  * Sets up app routes.
  */
 InstaProxy.setUpRoutes = function () {
@@ -229,6 +249,7 @@ InstaProxy.init = function () {
   this.log('Initializing.');
   this.app = express();
   this.setUpRoutes();
+  this.setUpFilter();
   this.serve();
 };
 
