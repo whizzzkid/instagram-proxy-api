@@ -31,9 +31,11 @@
   },
   "homepage": "https://github.com/whizzzkid/instagram-reverse-proxy#readme",
   "dependencies": {
+    "bloomxx": "0.0.5",
     "cors": "^2.8.4",
     "express": "^4.15.2",
     "https": "^1.0.0",
+    "parse-domain": "^1.1.0",
     "url": "^0.11.0"
   }
 }
