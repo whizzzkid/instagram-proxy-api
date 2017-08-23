@@ -37,8 +37,7 @@ InstaProxy.REFERER_DOMAIN_BLACKLIST = [
   'centraldacorrida',
   'bloodandco',
   'likes',
-  'pressingprive',
-  
+  'pressingprive'
 ];
 
 
