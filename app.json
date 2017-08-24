@@ -1,0 +1,18 @@
+{
+  "name": "Instagram Proxy API",
+  "description": "CORS complaint API for Instagram's public data.",
+  "repository": "https://github.com/whizzzkid/instagram-reverse-proxy",
+  "keywords": [
+    "instagram",
+    "instagram-data",
+    "jsonp",
+    "pagination",
+    "javascript",
+    "cors",
+    "fetch",
+    "public",
+    "data",
+    "heroku"
+  ],
+  "success_url": "/instagram/media?count=3"
+}
