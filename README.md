@@ -1,18 +1,18 @@
 # InstaReProxy
 
-[![Heroku](https://heroku-badge.herokuapp.com/?app=instareproxy)](https://igpi.ga/whizzzkid/media/?count=3)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://github.com/whizzzkid/instagram-reverse-proxy/pulls)
+[![Heroku](https://heroku-badge.herokuapp.com/?app=instareproxy&style=flat)](https://igpi.ga/whizzzkid/media/?count=3)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat)](https://github.com/whizzzkid/instagram-reverse-proxy/pulls)
 [![JavaScript Style Guide: Good Parts](https://img.shields.io/badge/code%20style-goodparts-brightgreen.svg?style=flat)](https://github.com/dwyl/goodparts "JavaScript The Good Parts")
-[![Code Climate](https://lima.codeclimate.com/github/whizzzkid/instagram-reverse-proxy/badges/gpa.svg)](https://lima.codeclimate.com/github/whizzzkid/instagram-reverse-proxy)
-[![Issue Count](https://lima.codeclimate.com/github/whizzzkid/instagram-reverse-proxy/badges/issue_count.svg)](https://lima.codeclimate.com/github/whizzzkid/instagram-reverse-proxy)
+[![Code Climate](https://lima.codeclimate.com/github/whizzzkid/instagram-reverse-proxy/badges/gpa.svg?style=flat)](https://lima.codeclimate.com/github/whizzzkid/instagram-reverse-proxy)
+[![Issue Count](https://lima.codeclimate.com/github/whizzzkid/instagram-reverse-proxy/badges/issue_count.svg?style=flat)](https://lima.codeclimate.com/github/whizzzkid/instagram-reverse-proxy)
 
 This builds over the Instagram's public API to provide more functionality and provides a CORS complaint reverse instagram proxy service. Try Here: [https://igpi.ga/whizzzkid/media/?count=3](https://igpi.ga/whizzzkid/media/?count=3)
 
 **Read Blog Post: [https://nishantarora.in/building-your-image-gallery-using-public-instagram-API.naml](https://nishantarora.in/building-your-image-gallery-using-public-instagram-API.naml)**
 
-## Deploy Your Own Proxy API
+## 1-Click Deploy
 
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/whizzzkid/instagram-reverse-proxy)
+[![Deploy](https://www.herokucdn.com/deploy/button.svg?style=flat)](https://heroku.com/deploy?template=https://github.com/whizzzkid/instagram-reverse-proxy)
 
 ## The Problem.
 
