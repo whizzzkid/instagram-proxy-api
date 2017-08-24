@@ -1,5 +1,6 @@
 # InstaReProxy
 
+[![Heroku](https://heroku-badge.herokuapp.com/?app=instareproxy)](https://igpi.ga/whizzzkid/media/?count=3)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://github.com/whizzzkid/instagram-reverse-proxy/pulls)
 [![JavaScript Style Guide: Good Parts](https://img.shields.io/badge/code%20style-goodparts-brightgreen.svg?style=flat)](https://github.com/dwyl/goodparts "JavaScript The Good Parts")
 [![Code Climate](https://lima.codeclimate.com/github/whizzzkid/instagram-reverse-proxy/badges/gpa.svg)](https://lima.codeclimate.com/github/whizzzkid/instagram-reverse-proxy)
@@ -8,6 +9,10 @@
 This builds over the Instagram's public API to provide more functionality and provides a CORS complaint reverse instagram proxy service. Try Here: [https://igpi.ga/whizzzkid/media/?count=3](https://igpi.ga/whizzzkid/media/?count=3)
 
 **Read Blog Post: [https://nishantarora.in/building-your-image-gallery-using-public-instagram-API.naml](https://nishantarora.in/building-your-image-gallery-using-public-instagram-API.naml)**
+
+## Deploy Your Own Proxy API
+
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/whizzzkid/instagram-reverse-proxy)
 
 ## The Problem.
 
@@ -33,7 +38,7 @@ As of now, the service is running on [https://igpi.ga/](https://igpi.ga/)(Heroku
 
   * Using jsonp
 
-    `https://igpi.ga/<user>/media/?callback=foo` or `https://igapi.ga/<user>/media/?callback=foo` 
+    `https://igpi.ga/<user>/media/?callback=foo` or `https://igapi.ga/<user>/media/?callback=foo`
 
   * Using pagination: Each response has url links to the next and previous page, you can use that to traverse through the results.
 
