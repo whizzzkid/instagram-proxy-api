@@ -12,10 +12,11 @@
 
 // Imports.
 const bloom = require('bloomxx');
+const blacklist = require('./blacklist.js');
 const cors = require('cors');
+const domainParser = require('domain-parser');
 const express = require('express');
 const https = require('https');
-const parseDomain = require('parse-domain');
 const url = require('url');
 
 // App Namespace.
@@ -24,21 +25,6 @@ let InstaProxy = {};
 // Constants
 InstaProxy.SERVER_PORT = 3000;
 InstaProxy.PROTOCOL = (process.env.NODE_ENV === 'prod') ? 'https' : 'http';
-InstaProxy.REFERER_DOMAIN_BLACKLIST = [
-  'bnk48',
-  'likedike',
-  'flowerwholesale',
-  'darwinapps',
-  'potomacfloralwholesale.com',
-  'estacaodaluz',
-  'leonidasoy',
-  'mplaeleicoes2017',
-  'ofuturocomcerteza',
-  'centraldacorrida',
-  'bloodandco',
-  'likes',
-  'pressingprive'
-];
 
 
 /**
@@ -46,7 +32,7 @@ InstaProxy.REFERER_DOMAIN_BLACKLIST = [
  * @param {string} msg
  */
 InstaProxy.log = function (msg) {
-  let time = new Date();
+  var time = new Date();
   console.log('[' + time.toString() + '] ' + msg);
 };
 
@@ -74,7 +60,7 @@ InstaProxy.constructURL = function (protocol, host, path, query) {
  */
 InstaProxy.reconstructJSON = function (request, json) {
   if ('items' in json && json.items.length > 0) {
-    let itemsAvailable = json.items.length;
+    var itemsAvailable = json.items.length;
 
     // Limiting number of posts as per count parameter.
     if ('count' in request.query) {
@@ -86,7 +72,7 @@ InstaProxy.reconstructJSON = function (request, json) {
       delete request.query['max_id'];
       delete request.query['min_id'];
 
-      let query = {};
+      var query = {};
 
       // just copying.
       query = Object.assign({}, request.query);
@@ -125,13 +111,13 @@ InstaProxy.handleInstagramJSON = function (request, response, json) {
 InstaProxy.buildInstagramHandlerCallback = function (request, response) {
   return function (serverResponse) {
     serverResponse.setEncoding('utf8');
-    let body = '';
+    var body = '';
     serverResponse.on('data', function (chunk) {
       body += chunk;
     });
     serverResponse.on('end', function () {
       try {
-        let json = JSON.parse(body);
+        var json = JSON.parse(body);
         this.handleInstagramJSON(request, response, json);
       } catch (error) {
         response.status(404).send('Invalid User').end();
@@ -156,16 +142,28 @@ InstaProxy.fetchFromInstagram = function (user, request, response) {
 
 
 /**
+ * Detects if the URL is safe based on blacklist.
+ * @param {string} urlString
+ * @return {boolean} url safe or not.
+ */
+InstaProxy.safeUrl = function (urlString) {
+  var hostname = url.parse(urlString).hostname;
+  var domain = domainParser(hostname).domainName;
+  return !this.filter.has(domain);
+}
+
+
+/**
  * Processing User Request. This works the same way as instagram API.
  * @param {object} request
  * @param {object} response
  */
 InstaProxy.processRequest = function (request, response) {
-  let user = request.params.user;
-  let referer = request.headers.referer;
+  var user = request.params.user;
+  var referer = request.headers.referer;
   if (referer === undefined ||
       referer === 'undefined' ||
-      !this.filter.has(parseDomain(referer).domain)) {
+      this.safeUrl(referer)) {
     this.log('Processing [User:"' + user + '", ' +
              'Query:"' + JSON.stringify(request.query) + ', ' +
              'Referer:"' + referer + '"]');
@@ -213,9 +211,9 @@ InstaProxy.sendToRepo = function (request, response) {
  */
 InstaProxy.setUpFilter = function () {
   this.log('Setting Up Filters');
-  this.filter = bloom.BloomFilter.createOptimal(this.REFERER_DOMAIN_BLACKLIST.length);
-  for (var i in this.REFERER_DOMAIN_BLACKLIST) {
-    this.filter.add(this.REFERER_DOMAIN_BLACKLIST[i]);
+  this.filter = bloom.BloomFilter.createOptimal(blacklist.list.length);
+  for (var i in blacklist.list) {
+    this.filter.add(blacklist.list[i]);
   }
 };
 

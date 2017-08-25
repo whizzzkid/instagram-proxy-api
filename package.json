@@ -33,9 +33,9 @@
   "dependencies": {
     "bloomxx": "0.0.5",
     "cors": "^2.8.4",
+    "domain-parser": "0.0.5",
     "express": "^4.15.2",
     "https": "^1.0.0",
-    "parse-domain": "^1.1.0",
     "url": "^0.11.0"
   }
 }
