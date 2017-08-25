@@ -17,6 +17,7 @@ const cors = require('cors');
 const domainParser = require('domain-parser');
 const express = require('express');
 const https = require('https');
+const responseTime = require('response-time');
 const url = require('url');
 
 // App Namespace.
@@ -207,6 +208,15 @@ InstaProxy.sendToRepo = function (request, response) {
 
 
 /**
+ * Run server.
+ */
+InstaProxy.serve = function () {
+  this.log('Starting server.');
+  this.app.listen(process.env.PORT || this.SERVER_PORT);
+};
+
+
+/**
  * Bloom Filter implementation for blacklisting domains.
  */
 InstaProxy.setUpFilter = function () {
@@ -215,6 +225,7 @@ InstaProxy.setUpFilter = function () {
   for (var i in blacklist.list) {
     this.filter.add(blacklist.list[i]);
   }
+  this.serve();
 };
 
 
@@ -227,27 +238,25 @@ InstaProxy.setUpRoutes = function () {
   this.app.get('/apple-touch-icon.png', this.noContent);
   this.app.get('/:user/media/', cors(), this.processRequest.bind(this));
   this.app.get('*', this.sendToRepo);
+  this.setUpFilter();
 };
 
 
 /**
- * Run server.
+ * Sets Up App Params.
  */
-InstaProxy.serve = function () {
-  this.log('Starting server.');
-  this.app.listen(process.env.PORT || this.SERVER_PORT);
+InstaProxy.setUpApp = function () {
+  this.app = express();
+  this.app.use(responseTime());
+  this.setUpRoutes();
 };
-
 
 /**
  * Init Method.
  */
 InstaProxy.init = function () {
   this.log('Initializing.');
-  this.app = express();
-  this.setUpRoutes();
-  this.setUpFilter();
-  this.serve();
+  this.setUpApp();
 };
 
 // Init.

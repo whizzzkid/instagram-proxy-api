@@ -36,6 +36,7 @@
     "domain-parser": "0.0.5",
     "express": "^4.15.2",
     "https": "^1.0.0",
+    "response-time": "^2.3.2",
     "url": "^0.11.0"
   }
 }
