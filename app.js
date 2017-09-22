@@ -93,17 +93,6 @@ InstaProxy.reconstructJSON = function (request, json) {
 
 
 /**
- * Handles JSON data fetched from Instagram.
- * @param {object} request
- * @param {object} response
- * @param {object} json
- */
-InstaProxy.handleInstagramJSON = function (request, response, json) {
-  response.jsonp(this.reconstructJSON(request, json));
-};
-
-
-/**
  * Builds the callback function for handling Instagram response.
  * @param {object} request
  * @param {object} response
@@ -119,12 +108,15 @@ InstaProxy.buildInstagramHandlerCallback = function (request, response) {
     serverResponse.on('end', function () {
       try {
         var json = JSON.parse(body);
-        this.handleInstagramJSON(request, response, json);
+        if (!this.isAdvancedRequest(request)) {
+          json = this.reconstructJSON(request, json);
+        }
+        response.jsonp(json);
       } catch (error) {
         response.status(404).send('Invalid User').end();
       }
     }.bind(this));
-  };
+  }.bind(this);
 };
 
 
@@ -134,11 +126,17 @@ InstaProxy.buildInstagramHandlerCallback = function (request, response) {
  * @param {object} request
  * @param {object} response
  */
-InstaProxy.fetchFromInstagram = function (user, request, response) {
-  https.get(
-    this.constructURL(
-      'https', 'www.instagram.com', '/' + user + '/media/', request.query),
-    this.buildInstagramHandlerCallback(request, response).bind(this));
+InstaProxy.fetchFromInstagramCallback = function (path, request, response) {
+  return function () {
+    this.log(
+      'Processing [P:"' + path + '", ' +
+      'Q:"' + JSON.stringify(request.query) + ', ' +
+      'R:"' + request.headers.referer + '"]');
+    https.get(
+      this.constructURL(
+        'https', 'www.instagram.com', path, request.query),
+      this.buildInstagramHandlerCallback(request, response));
+  }.bind(this);
 };
 
 
@@ -155,24 +153,63 @@ InstaProxy.safeUrl = function (urlString) {
 
 
 /**
+ * Verify the request from blacklist.
+ * @param {object} request
+ * @param {object} response
+ * @param {function} callback
+ */
+InstaProxy.validateReferrer = function (request, response, callback) {
+  var referer = request.headers.referer;
+  if (referer === undefined ||
+      referer === 'undefined' ||
+      this.safeUrl(referer)) {
+    callback();
+  } else {
+    this.log('Denying access to request from: ' + referer);
+    this.accessDenied(request, response);
+  }
+}
+
+
+/**
+ * Check if advanced params are requested.
+ * @param {object} request
+ */
+InstaProxy.isAdvancedRequest = function (request) {
+  return ('__a' in request.query && '__a' === "1");
+}
+
+
+/**
+ * Processing requests with advanced params.
+ * @param {object} request
+ * @param {object} response
+ */
+InstaProxy.checkAdvancedRequest = function (request, response) {
+  if (this.isAdvancedRequest) {
+    this.validateReferrer(
+      request,
+      response,
+      this.fetchFromInstagramCallback(request.params[0], request, response)
+    );
+  } else {
+    response.redirect('https://github.com/whizzzkid/instagram-reverse-proxy');
+  }
+};
+
+
+/**
  * Processing User Request. This works the same way as instagram API.
  * @param {object} request
  * @param {object} response
  */
 InstaProxy.processRequest = function (request, response) {
   var user = request.params.user;
-  var referer = request.headers.referer;
-  if (referer === undefined ||
-      referer === 'undefined' ||
-      this.safeUrl(referer)) {
-    this.log('Processing [User:"' + user + '", ' +
-             'Query:"' + JSON.stringify(request.query) + ', ' +
-             'Referer:"' + referer + '"]');
-    this.fetchFromInstagram(user, request, response);
-  } else {
-    this.log('Denying access to request from: ' + referer);
-    this.accessDenied(request, response);
-  }
+  this.validateReferrer(
+    request,
+    response,
+    this.fetchFromInstagramCallback('/' + user + '/media/', request, response)
+  );
 };
 
 
@@ -194,16 +231,6 @@ InstaProxy.accessDenied = function (request, response) {
  */
 InstaProxy.noContent = function (request, response) {
   response.status(204).end();
-};
-
-
-/**
- * Sends User to project repo.
- * @param {object} request
- * @param {object} response
- */
-InstaProxy.sendToRepo = function (request, response) {
-  response.redirect('https://github.com/whizzzkid/instagram-reverse-proxy');
 };
 
 
@@ -237,7 +264,7 @@ InstaProxy.setUpRoutes = function () {
   this.app.get('/favicon.ico', this.noContent);
   this.app.get('/apple-touch-icon.png', this.noContent);
   this.app.get('/:user/media/', cors(), this.processRequest.bind(this));
-  this.app.get('*', this.sendToRepo);
+  this.app.get('*', cors(), this.checkAdvancedRequest.bind(this));
   this.setUpFilter();
 };
 
