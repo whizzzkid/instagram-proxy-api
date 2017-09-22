@@ -111,7 +111,7 @@ InstaProxy.buildInstagramHandlerCallback = function (request, response) {
         if (!this.isAdvancedRequest(request)) {
           json = this.reconstructJSON(request, json);
         }
-        response.jsonp(json);
+        response.jsonp(json).end();
       } catch (error) {
         response.status(404).send('Invalid User').end();
       }
@@ -163,7 +163,7 @@ InstaProxy.validateReferrer = function (request, response, callback) {
   if (referer === undefined ||
       referer === 'undefined' ||
       this.safeUrl(referer)) {
-    callback();
+    return callback();
   } else {
     this.log('Denying access to request from: ' + referer);
     this.accessDenied(request, response);
@@ -235,6 +235,16 @@ InstaProxy.noContent = function (request, response) {
 
 
 /**
+ * Server Check
+ * @param {object} request
+ * @param {object} response
+ */
+InstaProxy.serverCheck = function (request, response) {
+  response.jsonp({ok: true}).end();
+};
+
+
+/**
  * Run server.
  */
 InstaProxy.serve = function () {
@@ -263,6 +273,7 @@ InstaProxy.setUpRoutes = function () {
   this.log('Setting up routes.');
   this.app.get('/favicon.ico', this.noContent);
   this.app.get('/apple-touch-icon.png', this.noContent);
+  this.app.get('/server_check_hook', this.serverCheck);
   this.app.get('/:user/media/', cors(), this.processRequest.bind(this));
   this.app.get('*', cors(), this.checkAdvancedRequest.bind(this));
   this.setUpFilter();
