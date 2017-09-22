@@ -10,7 +10,7 @@
     "test": "echo \"Dummy Tests Pass\""
   },
   "engines": {
-    "node": "4.6"
+    "node": "6.11.3"
   },
   "repository": {
     "type": "git",
@@ -34,7 +34,7 @@
     "bloomxx": "0.0.5",
     "cors": "^2.8.4",
     "domain-parser": "0.0.5",
-    "express": "^4.15.2",
+    "express": "^4.15.4",
     "https": "^1.0.0",
     "response-time": "^2.3.2",
     "url": "^0.11.0"
