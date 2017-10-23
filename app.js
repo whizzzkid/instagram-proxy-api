@@ -1,9 +1,8 @@
 /**
  * This is going to build over the Instagram's public API.
  *
- * Instagram currently allows accessing public posts but misses
- * a lot of functionality like limits, pagination, jsonp, etc.
- * This aims to fix that.
+ * Instagram currently allows accessing public posts but misses a lot of
+ * functionality like limits, pagination, jsonp, etc. This aims to fix that.
  *
  * @author me@nishantarora.in (Nishant Arora)
  */
@@ -146,10 +145,12 @@ InstaProxy.fetchFromInstagramCallback = function (path, request, response) {
  * @return {boolean} url safe or not.
  */
 InstaProxy.safeUrl = function (urlString) {
-  var hostname = url.parse(urlString).hostname;
-  var domain = domainParser(hostname).domainName;
-  return !this.filter.has(domain);
-}
+  return !this.filter.has(
+    domainParser(
+      url.parse(urlString).hostname
+    ).domainName
+  );
+};
 
 
 /**
@@ -157,6 +158,7 @@ InstaProxy.safeUrl = function (urlString) {
  * @param {object} request
  * @param {object} response
  * @param {function} callback
+ * @return {function}
  */
 InstaProxy.validateReferrer = function (request, response, callback) {
   var referer = request.headers.referer;
@@ -168,12 +170,13 @@ InstaProxy.validateReferrer = function (request, response, callback) {
     this.log('Denying access to request from: ' + referer);
     this.accessDenied(request, response);
   }
-}
+};
 
 
 /**
  * Check if advanced params are requested.
  * @param {object} request
+ * @return {boolean}
  */
 InstaProxy.isAdvancedRequest = function (request) {
   return ('__a' in request.query && '__a' === "1");
