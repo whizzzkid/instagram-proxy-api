@@ -1,6 +1,6 @@
 # InstaReProxy
 
-[![Heroku](https://heroku-badge.herokuapp.com/?app=instareproxy&style=flat)](https://igpi.ga/whizzzkid/media/?count=3)
+[![Heroku](https://heroku-badge.herokuapp.com/?app=instareproxy&style=flat&root=server_check_hook)](https://igpi.ga/whizzzkid/media/?count=3)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat)](https://github.com/whizzzkid/instagram-reverse-proxy/pulls)
 [![JavaScript Style Guide: Good Parts](https://img.shields.io/badge/code%20style-goodparts-brightgreen.svg?style=flat)](https://github.com/dwyl/goodparts "JavaScript The Good Parts")
 [![Code Climate](https://lima.codeclimate.com/github/whizzzkid/instagram-reverse-proxy/badges/gpa.svg?style=flat)](https://lima.codeclimate.com/github/whizzzkid/instagram-reverse-proxy)
