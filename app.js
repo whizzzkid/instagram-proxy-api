@@ -180,7 +180,10 @@ InstaProxy.validateReferrer = function (request, response, callback) {
  * @return {boolean}
  */
 InstaProxy.isAdvancedRequest = function (request) {
-  return ('__a' in request.query && '__a' === "1");
+  return ('__a' in request.query &&
+    request.query['__a'] === "1" &&
+    request.path !== "/"
+  );
 }
 
 
@@ -190,7 +193,7 @@ InstaProxy.isAdvancedRequest = function (request) {
  * @param {object} response
  */
 InstaProxy.checkAdvancedRequest = function (request, response) {
-  if (this.isAdvancedRequest) {
+  if (this.isAdvancedRequest(request)) {
     this.validateReferrer(
       request,
       response,
