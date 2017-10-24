@@ -103,10 +103,8 @@ InstaProxy.buildInstagramHandlerCallback = function (request, response) {
     var body = '';
     serverResponse.on('data', function (chunk) {
       body += chunk;
-      console.log('i was called');
     });
     serverResponse.on('end', function () {
-      console.log('finally i was called');
       try {
         var json = JSON.parse(body);
         if (!this.isAdvancedRequest(request)) {
@@ -134,8 +132,6 @@ InstaProxy.fetchFromInstagramCallback = function (path, request, response) {
       'Processing [P:"' + path + '", ' +
       'Q:"' + JSON.stringify(request.query) + ', ' +
       'R:"' + request.headers.referer + '"]');
-    console.log(this.constructURL(
-      'https', 'www.instagram.com', path, request.query));
     https.get(
       this.constructURL(
         'https', 'www.instagram.com', path, request.query),
