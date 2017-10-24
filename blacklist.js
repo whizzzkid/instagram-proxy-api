@@ -13,5 +13,8 @@ exports.list = [
   'ofuturocomcerteza.pt',
   'potomacfloralwholesale.com',
   'pressingprive.com',
-  'weekendtrip.fr'
+  'weekendtrip.fr',
+  'getspiff.no',
+  'skinmotion.com',
+  'kidmademodern.com'
 ];
