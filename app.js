@@ -106,11 +106,11 @@ InstaProxy.buildInstagramHandlerCallback = function (request, response) {
     });
     serverResponse.on('end', function () {
       try {
+        this.log(body);
         var json = JSON.parse(body);
         if (!this.isAdvancedRequest(request)) {
           json = this.reconstructJSON(request, json);
         }
-        this.log(JSON.stringify(json));
         response.jsonp(json).end();
       } catch (error) {
         this.log(error);
