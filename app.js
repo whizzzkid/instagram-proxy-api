@@ -112,6 +112,7 @@ InstaProxy.buildInstagramHandlerCallback = function (request, response) {
         }
         response.jsonp(json).end();
       } catch (error) {
+        this.log(error);
         response.status(404).send('Invalid User').end();
       }
     }.bind(this));
