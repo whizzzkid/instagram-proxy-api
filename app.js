@@ -23,8 +23,18 @@ const url = require('url');
 let InstaProxy = {};
 
 // Constants
-InstaProxy.SERVER_PORT = 3000;
+InstaProxy.DEBUG_MODE = false;
+InstaProxy.GITHUB_REPO = 'https://github.com/whizzzkid/instagram-reverse-proxy';
 InstaProxy.PROTOCOL = (process.env.NODE_ENV === 'prod') ? 'https' : 'http';
+InstaProxy.SERVER_PORT = 3000;
+InstaProxy.STATUS_CODES = {
+  OK: 200,
+  NO_CONTENT: 204,
+  PERMANENTLY_MOVED: 301,
+  ACCESS_DENIED: 403,
+  NOT_FOUND: 404,
+  SERVER_ERROR: 500
+};
 
 
 /**
@@ -97,7 +107,7 @@ InstaProxy.reconstructJSON = function (request, json) {
  * @param {object} response
  * @return {function} callback
  */
-InstaProxy.buildInstagramHandlerCallback = function (request, response) {
+InstaProxy.instagramHandlerCB = function (request, response) {
   return function (serverResponse) {
     serverResponse.setEncoding('utf8');
     var body = '';
@@ -107,13 +117,20 @@ InstaProxy.buildInstagramHandlerCallback = function (request, response) {
     serverResponse.on('end', function () {
       try {
         var json = JSON.parse(body);
-        if (!this.isAdvancedRequest(request)) {
+        if (!this.isAdvancedRequestValid(request)) {
           json = this.reconstructJSON(request, json);
         }
-        response.jsonp(json).end();
+        this.respond(
+          response,
+          this.STATUS_CODES.OK,
+          json
+        );
       } catch (error) {
-        this.log(error);
-        response.status(404).send('Invalid User').end();
+        this.respond(
+          response,
+          this.STATUS_CODES.NOT_FOUND,
+          this.errorMessageGenerator('Invalid User')
+        );
       }
     }.bind(this));
   }.bind(this);
@@ -126,17 +143,15 @@ InstaProxy.buildInstagramHandlerCallback = function (request, response) {
  * @param {object} request
  * @param {object} response
  */
-InstaProxy.fetchFromInstagramCallback = function (path, request, response) {
-  return function () {
-    this.log(
-      'Processing [P:"' + path + '", ' +
-      'Q:"' + JSON.stringify(request.query) + ', ' +
-      'R:"' + request.headers.referer + '"]');
-    https.get(
-      this.constructURL(
-        'https', 'www.instagram.com', path, request.query),
-      this.buildInstagramHandlerCallback(request, response));
-  }.bind(this);
+InstaProxy.fetchFromInstagram = function (path, request, response) {
+  this.log(
+    'Processing [P:"' + path + '", ' +
+    'Q:"' + JSON.stringify(request.query) + ', ' +
+    'R:"' + request.headers.referer + '"]');
+  https.get(
+    this.constructURL(
+      'https', 'www.instagram.com', path, request.query),
+    this.instagramHandlerCB(request, response));
 };
 
 
@@ -145,7 +160,7 @@ InstaProxy.fetchFromInstagramCallback = function (path, request, response) {
  * @param {string} urlString
  * @return {boolean} url safe or not.
  */
-InstaProxy.safeUrl = function (urlString) {
+InstaProxy.isNotOnBlackList = function (urlString) {
   return !this.filter.has(
     domainParser(
       url.parse(urlString).hostname
@@ -157,20 +172,40 @@ InstaProxy.safeUrl = function (urlString) {
 /**
  * Verify the request from blacklist.
  * @param {object} request
- * @param {object} response
- * @param {function} callback
- * @return {function}
+ * @return {boolean} safe or not
  */
-InstaProxy.validateReferrer = function (request, response, callback) {
+InstaProxy.isReferrerSafe = function (request) {
   var referer = request.headers.referer;
-  if (referer === undefined ||
+  // Undefined refer will only be allowed in debug mode.
+  if (this.DEBUG_MODE) {
+    return (
+      referer === undefined ||
       referer === 'undefined' ||
-      this.safeUrl(referer)) {
-    return callback();
-  } else {
-    this.log('Denying access to request from: ' + referer);
-    this.accessDenied(request, response);
+      this.isNotOnBlackList(referer)
+    );
   }
+
+  return (
+    referer !== undefined &&
+    referer !== 'undefined' &&
+    this.isNotOnBlackList(referer)
+  );
+};
+
+
+/**
+ * Generate error message response object.
+ * @param {string} error
+ * @returns {object}
+ */
+InstaProxy.errorMessageGenerator = function (error) {
+  if (this.DEBUG_MODE) {
+    this.log(error);
+  }
+
+  return {
+    'error': error
+  };
 };
 
 
@@ -179,44 +214,45 @@ InstaProxy.validateReferrer = function (request, response, callback) {
  * @param {object} request
  * @return {boolean}
  */
-InstaProxy.isAdvancedRequest = function (request) {
+InstaProxy.isAdvancedRequestValid = function (request) {
   return ('__a' in request.query &&
-    request.query['__a'] === "1" &&
-    request.path !== "/"
+    request.query['__a'] === '1' &&
+    request.path !== '/'
   );
 }
 
 
 /**
- * Processing requests with advanced params.
- * @param {object} request
- * @param {object} response
+ * Processing User Request. This works the same way as instagram API.
+ * @param {boolean} checkAdvance
+ * @returns {function}
  */
-InstaProxy.checkAdvancedRequest = function (request, response) {
-  if (this.isAdvancedRequest(request)) {
-    this.validateReferrer(
-      request,
-      response,
-      this.fetchFromInstagramCallback(request.params[0], request, response)
-    );
-  } else {
-    response.redirect('https://github.com/whizzzkid/instagram-reverse-proxy');
-  }
+InstaProxy.processCB = function (checkAdvance) {
+  return function (request, response) {
+    var path = '';
+    if (checkAdvance && this.isAdvancedRequestValid(request)) {
+      path = request.params[0];
+    } else {
+      path = '/' + request.params.user + '/media/';
+    }
+
+    if (this.isReferrerSafe(request)) {
+      this.fetchFromInstagram(path, request, response);
+    } else {
+      this.accessDenied(request, response);
+    }
+  }.bind(this);
 };
 
 
 /**
- * Processing User Request. This works the same way as instagram API.
- * @param {object} request
+ * Send Response.
  * @param {object} response
+ * @param {integer} statusCode
+ * @param {object} jsonMessage
  */
-InstaProxy.processRequest = function (request, response) {
-  var user = request.params.user;
-  this.validateReferrer(
-    request,
-    response,
-    this.fetchFromInstagramCallback('/' + user + '/media/', request, response)
-  );
+InstaProxy.respond = function (response, statusCode, jsonMessage) {
+  response.status(statusCode).jsonp(jsonMessage).end();
 };
 
 
@@ -226,8 +262,12 @@ InstaProxy.processRequest = function (request, response) {
  * @param {object} response
  */
 InstaProxy.accessDenied = function (request, response) {
-  response.status(403).end(
-    'Your website is blackListed. Contact me@nishantarora.in for more info.');
+  this.respond(
+    response,
+    this.STATUS_CODES.ACCESS_DENIED,
+    this.errorMessageGenerator(
+      'Denying access to request from referer: ' + request.headers.referer)
+  );
 };
 
 
@@ -237,7 +277,11 @@ InstaProxy.accessDenied = function (request, response) {
  * @param {object} response
  */
 InstaProxy.noContent = function (request, response) {
-  response.status(204).end();
+  this.respond(
+    response,
+    this.STATUS_CODES.NO_CONTENT,
+    this.errorMessageGenerator(request.path + ' Not Found')
+  );
 };
 
 
@@ -247,7 +291,11 @@ InstaProxy.noContent = function (request, response) {
  * @param {object} response
  */
 InstaProxy.serverCheck = function (request, response) {
-  response.jsonp({ok: true}).end();
+  this.respond(
+    response,
+    this.STATUS_CODES.OK,
+    { ok: true }
+  )
 };
 
 
@@ -261,7 +309,7 @@ InstaProxy.serve = function () {
 
 
 /**
- * Bloom Filter implementation for blacklisting domains.
+ * Bloom Filter implementation for blacklisted domains.
  */
 InstaProxy.setUpFilter = function () {
   this.log('Setting Up Filters');
@@ -278,11 +326,10 @@ InstaProxy.setUpFilter = function () {
  */
 InstaProxy.setUpRoutes = function () {
   this.log('Setting up routes.');
-  this.app.get('/favicon.ico', this.noContent);
-  this.app.get('/apple-touch-icon.png', this.noContent);
-  this.app.get('/server_check_hook', this.serverCheck);
-  this.app.get('/:user/media/', cors(), this.processRequest.bind(this));
-  this.app.get('*', cors(), this.checkAdvancedRequest.bind(this));
+  this.app.get('/*\.(ico|png|css|html|js)', this.noContent.bind(this));
+  this.app.get('/server_check_hook', this.serverCheck.bind(this));
+  this.app.get('/:user/media/', cors(), this.processCB(false).bind(this));
+  this.app.get('*', cors(), this.processCB(true).bind(this));
   this.setUpFilter();
 };
 

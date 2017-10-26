@@ -16,5 +16,6 @@ exports.list = [
   'weekendtrip.fr',
   'getspiff.no',
   'skinmotion.com',
-  'kidmademodern.com'
+  'kidmademodern.com',
+  'mbinzoz.co'
 ];
