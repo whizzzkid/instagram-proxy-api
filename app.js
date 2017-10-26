@@ -156,7 +156,8 @@ InstaProxy.fetchFromInstagram = function(path, request, response) {
   https.get(
     this.constructURL(
       'https', 'www.instagram.com', path, request.query),
-    this.instagramHandlerCB(request, response));
+    this.instagramHandlerCB(request, response)
+  );
 };
 
 
@@ -183,7 +184,7 @@ InstaProxy.isNotOnBlackList = function(urlString) {
  */
 InstaProxy.isRefererSafe = function(request) {
   var referer = request.headers.referer;
-  // Undefined refer will only be allowed in debug mode.
+  // Undefined refer will only be allowed on Prod.
   if (this.DEBUG_MODE) {
     return (
       referer === undefined ||
@@ -232,14 +233,14 @@ InstaProxy.isAdvancedRequestValid = function(request) {
 
 /**
  * Processing User Request. This works the same way as instagram API.
- * @param {boolean} checkAdvance
+ * @param {boolean} checkIfAdvanceRequest
  * @return {function}
  * @this
  */
-InstaProxy.processCB = function(checkAdvance) {
+InstaProxy.processCB = function(checkIfAdvanceRequest) {
   return function(request, response) {
     var path = '';
-    if (checkAdvance && this.isAdvancedRequestValid(request)) {
+    if (checkIfAdvanceRequest && this.isAdvancedRequestValid(request)) {
       path = request.params[0];
     } else {
       path = '/' + request.params.user + '/media/';
@@ -276,7 +277,7 @@ InstaProxy.accessDenied = function(request, response) {
     response,
     this.STATUS_CODES.ACCESS_DENIED,
     this.errorMessageGenerator(
-      'Denying access to request from referer: ' + request.headers.referer)
+      'Denying request from referer: ' + request.headers.referer)
   );
 };
 
@@ -297,7 +298,25 @@ InstaProxy.noContent = function(request, response) {
 
 
 /**
- * Server Check
+ * Redirect to Repo.
+ * @param {object} request
+ * @param {object} response
+ * @this
+ */
+InstaProxy.sendToRepo = function(request, response) {
+  response.set({
+    'location': this.GITHUB_REPO
+  });
+  this.respond(
+    response,
+    this.STATUS_CODES.PERMANENTLY_MOVED,
+    this.errorMessageGenerator('Redirecting')
+  );
+};
+
+
+/**
+ * Server Check.
  * @param {object} request
  * @param {object} response
  * @this
@@ -341,6 +360,7 @@ InstaProxy.setUpFilter = function() {
  */
 InstaProxy.setUpRoutes = function() {
   this.log('Setting up routes.');
+  this.app.get('/', this.sendToRepo.bind(this));
   this.app.get('/*\.(ico|png|css|html|js)', this.noContent.bind(this));
   this.app.get('/server_check_hook', this.serverCheck.bind(this));
   this.app.get('/:user/media/', cors(), this.processCB(false).bind(this));
@@ -358,6 +378,7 @@ InstaProxy.setUpApp = function() {
   this.app.use(responseTime());
   this.setUpRoutes();
 };
+
 
 /**
  * Init Method.
