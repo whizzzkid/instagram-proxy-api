@@ -1,6 +1,6 @@
 {
   "name": "insta-proxy",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Provides an API layer over Instagram's public API.",
   "main": "app.js",
   "scripts": {

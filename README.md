@@ -97,3 +97,7 @@ OMFG, this shit just got out of hand:
 ![Imgur](http://i.imgur.com/pNp7R74.png)
 
 ## Update July 12, 2017: Moved all services to igpi.ga ('a' removed). Blacklist added.
+
+## Update Oct 26, 2017: Undefined referers will not be served at prod.
+
+Both production urls igapi.ga nd igpi.ga will no longer serve content to `undefined` referers. Your requests will need to explicitly provide referer meta data in the headers. If you're using this service on your website, your browser will automatically handle this, so no change will be required on your part.

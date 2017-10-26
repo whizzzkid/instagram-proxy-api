@@ -20,14 +20,16 @@ const responseTime = require('response-time');
 const url = require('url');
 
 // App Namespace.
-let InstaProxy = {};
+const InstaProxy = {};
 
-// Constants
-InstaProxy.DEBUG_MODE = false;
-InstaProxy.GITHUB_REPO = 'https://github.com/whizzzkid/instagram-reverse-proxy';
-InstaProxy.PROTOCOL = (process.env.NODE_ENV === 'prod') ? 'https' : 'http';
-InstaProxy.SERVER_PORT = 3000;
-InstaProxy.STATUS_CODES = {
+/** @const */ InstaProxy.DEBUG_MODE = (process.env.NODE_ENV === 'dev') ?
+  true : false;
+/** @const */ InstaProxy.GITHUB_REPO =
+  'https://github.com/whizzzkid/instagram-reverse-proxy';
+/** @const */ InstaProxy.PROTOCOL = (!this.DEBUG_MODE) ?
+  'https' : 'http';
+/** @const */ InstaProxy.SERVER_PORT = 3000;
+/** @const */ InstaProxy.STATUS_CODES = {
   OK: 200,
   NO_CONTENT: 204,
   PERMANENTLY_MOVED: 301,
@@ -41,7 +43,7 @@ InstaProxy.STATUS_CODES = {
  * A simple logging function for consistency.
  * @param {string} msg
  */
-InstaProxy.log = function (msg) {
+InstaProxy.log = function(msg) {
   var time = new Date();
   console.log('[' + time.toString() + '] ' + msg);
 };
@@ -55,7 +57,7 @@ InstaProxy.log = function (msg) {
  * @param {string} query
  * @return {string} new url.
  */
-InstaProxy.constructURL = function (protocol, host, path, query) {
+InstaProxy.constructURL = function(protocol, host, path, query) {
   return url.format({
     'protocol': protocol, 'host': host, 'pathname': path, 'query': query
   });
@@ -67,8 +69,9 @@ InstaProxy.constructURL = function (protocol, host, path, query) {
  * @param {object} request
  * @param {object} json
  * @return {object} new data as per query.
+ * @this
  */
-InstaProxy.reconstructJSON = function (request, json) {
+InstaProxy.reconstructJSON = function(request, json) {
   if ('items' in json && json.items.length > 0) {
     var itemsAvailable = json.items.length;
 
@@ -106,15 +109,16 @@ InstaProxy.reconstructJSON = function (request, json) {
  * @param {object} request
  * @param {object} response
  * @return {function} callback
+ * @this
  */
-InstaProxy.instagramHandlerCB = function (request, response) {
-  return function (serverResponse) {
+InstaProxy.instagramHandlerCB = function(request, response) {
+  return function(serverResponse) {
     serverResponse.setEncoding('utf8');
     var body = '';
-    serverResponse.on('data', function (chunk) {
+    serverResponse.on('data', function(chunk) {
       body += chunk;
     });
-    serverResponse.on('end', function () {
+    serverResponse.on('end', function() {
       try {
         var json = JSON.parse(body);
         if (!this.isAdvancedRequestValid(request)) {
@@ -139,11 +143,12 @@ InstaProxy.instagramHandlerCB = function (request, response) {
 
 /**
  * Fetches content from Instagram API.
- * @param {string} user
+ * @param {string} path
  * @param {object} request
  * @param {object} response
+ * @this
  */
-InstaProxy.fetchFromInstagram = function (path, request, response) {
+InstaProxy.fetchFromInstagram = function(path, request, response) {
   this.log(
     'Processing [P:"' + path + '", ' +
     'Q:"' + JSON.stringify(request.query) + ', ' +
@@ -159,8 +164,9 @@ InstaProxy.fetchFromInstagram = function (path, request, response) {
  * Detects if the URL is safe based on blacklist.
  * @param {string} urlString
  * @return {boolean} url safe or not.
+ * @this
  */
-InstaProxy.isNotOnBlackList = function (urlString) {
+InstaProxy.isNotOnBlackList = function(urlString) {
   return !this.filter.has(
     domainParser(
       url.parse(urlString).hostname
@@ -173,8 +179,9 @@ InstaProxy.isNotOnBlackList = function (urlString) {
  * Verify the request from blacklist.
  * @param {object} request
  * @return {boolean} safe or not
+ * @this
  */
-InstaProxy.isReferrerSafe = function (request) {
+InstaProxy.isRefererSafe = function(request) {
   var referer = request.headers.referer;
   // Undefined refer will only be allowed in debug mode.
   if (this.DEBUG_MODE) {
@@ -196,9 +203,10 @@ InstaProxy.isReferrerSafe = function (request) {
 /**
  * Generate error message response object.
  * @param {string} error
- * @returns {object}
+ * @return {object}
+ * @this
  */
-InstaProxy.errorMessageGenerator = function (error) {
+InstaProxy.errorMessageGenerator = function(error) {
   if (this.DEBUG_MODE) {
     this.log(error);
   }
@@ -214,21 +222,22 @@ InstaProxy.errorMessageGenerator = function (error) {
  * @param {object} request
  * @return {boolean}
  */
-InstaProxy.isAdvancedRequestValid = function (request) {
+InstaProxy.isAdvancedRequestValid = function(request) {
   return ('__a' in request.query &&
     request.query['__a'] === '1' &&
     request.path !== '/'
   );
-}
+};
 
 
 /**
  * Processing User Request. This works the same way as instagram API.
  * @param {boolean} checkAdvance
- * @returns {function}
+ * @return {function}
+ * @this
  */
-InstaProxy.processCB = function (checkAdvance) {
-  return function (request, response) {
+InstaProxy.processCB = function(checkAdvance) {
+  return function(request, response) {
     var path = '';
     if (checkAdvance && this.isAdvancedRequestValid(request)) {
       path = request.params[0];
@@ -236,7 +245,7 @@ InstaProxy.processCB = function (checkAdvance) {
       path = '/' + request.params.user + '/media/';
     }
 
-    if (this.isReferrerSafe(request)) {
+    if (this.isRefererSafe(request)) {
       this.fetchFromInstagram(path, request, response);
     } else {
       this.accessDenied(request, response);
@@ -251,7 +260,7 @@ InstaProxy.processCB = function (checkAdvance) {
  * @param {integer} statusCode
  * @param {object} jsonMessage
  */
-InstaProxy.respond = function (response, statusCode, jsonMessage) {
+InstaProxy.respond = function(response, statusCode, jsonMessage) {
   response.status(statusCode).jsonp(jsonMessage).end();
 };
 
@@ -260,8 +269,9 @@ InstaProxy.respond = function (response, statusCode, jsonMessage) {
  * Access Denied.
  * @param {object} request
  * @param {object} response
+ * @this
  */
-InstaProxy.accessDenied = function (request, response) {
+InstaProxy.accessDenied = function(request, response) {
   this.respond(
     response,
     this.STATUS_CODES.ACCESS_DENIED,
@@ -275,8 +285,9 @@ InstaProxy.accessDenied = function (request, response) {
  * Sends no content as response.
  * @param {object} request
  * @param {object} response
+ * @this
  */
-InstaProxy.noContent = function (request, response) {
+InstaProxy.noContent = function(request, response) {
   this.respond(
     response,
     this.STATUS_CODES.NO_CONTENT,
@@ -289,20 +300,22 @@ InstaProxy.noContent = function (request, response) {
  * Server Check
  * @param {object} request
  * @param {object} response
+ * @this
  */
-InstaProxy.serverCheck = function (request, response) {
+InstaProxy.serverCheck = function(request, response) {
   this.respond(
     response,
     this.STATUS_CODES.OK,
     { ok: true }
-  )
+  );
 };
 
 
 /**
  * Run server.
+ * @this
  */
-InstaProxy.serve = function () {
+InstaProxy.serve = function() {
   this.log('Starting server.');
   this.app.listen(process.env.PORT || this.SERVER_PORT);
 };
@@ -310,8 +323,9 @@ InstaProxy.serve = function () {
 
 /**
  * Bloom Filter implementation for blacklisted domains.
+ * @this
  */
-InstaProxy.setUpFilter = function () {
+InstaProxy.setUpFilter = function() {
   this.log('Setting Up Filters');
   this.filter = bloom.BloomFilter.createOptimal(blacklist.list.length);
   for (var i in blacklist.list) {
@@ -323,8 +337,9 @@ InstaProxy.setUpFilter = function () {
 
 /**
  * Sets up app routes.
+ * @this
  */
-InstaProxy.setUpRoutes = function () {
+InstaProxy.setUpRoutes = function() {
   this.log('Setting up routes.');
   this.app.get('/*\.(ico|png|css|html|js)', this.noContent.bind(this));
   this.app.get('/server_check_hook', this.serverCheck.bind(this));
@@ -336,8 +351,9 @@ InstaProxy.setUpRoutes = function () {
 
 /**
  * Sets Up App Params.
+ * @this
  */
-InstaProxy.setUpApp = function () {
+InstaProxy.setUpApp = function() {
   this.app = express();
   this.app.use(responseTime());
   this.setUpRoutes();
@@ -345,8 +361,9 @@ InstaProxy.setUpApp = function () {
 
 /**
  * Init Method.
+ * @this
  */
-InstaProxy.init = function () {
+InstaProxy.init = function() {
   this.log('Initializing.');
   this.setUpApp();
 };
