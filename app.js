@@ -10,14 +10,14 @@
 'use strict';
 
 // Imports.
-const bloom = require('bloomxx');
-const blacklist = require('./blacklist.js');
-const cors = require('cors');
-const domainParser = require('domain-parser');
-const express = require('express');
-const https = require('https');
-const responseTime = require('response-time');
-const url = require('url');
+const Bloom = require('bloomxx');
+const Blacklist = require('./blacklist.js');
+const Cors = require('cors');
+const DomainParser = require('domain-parser');
+const Express = require('express');
+const Https = require('https');
+const ResponseTime = require('response-time');
+const Url = require('url');
 
 // App Namespace.
 const InstaProxy = {};
@@ -58,7 +58,7 @@ InstaProxy.log = function(msg) {
  * @return {string} new url.
  */
 InstaProxy.constructURL = function(protocol, host, path, query) {
-  return url.format({
+  return Url.format({
     'protocol': protocol, 'host': host, 'pathname': path, 'query': query
   });
 };
@@ -153,7 +153,7 @@ InstaProxy.fetchFromInstagram = function(path, request, response) {
     'Processing [P:"' + path + '", ' +
     'Q:"' + JSON.stringify(request.query) + ', ' +
     'R:"' + request.headers.referer + '"]');
-  https.get(
+  Https.get(
     this.constructURL(
       'https', 'www.instagram.com', path, request.query),
     this.instagramHandlerCB(request, response)
@@ -169,8 +169,8 @@ InstaProxy.fetchFromInstagram = function(path, request, response) {
  */
 InstaProxy.isNotOnBlackList = function(urlString) {
   return !this.filter.has(
-    domainParser(
-      url.parse(urlString).hostname
+    DomainParser(
+      Url.parse(urlString).hostname
     ).domainName
   );
 };
@@ -346,9 +346,12 @@ InstaProxy.serve = function() {
  */
 InstaProxy.setUpFilter = function() {
   this.log('Setting Up Filters');
-  this.filter = bloom.BloomFilter.createOptimal(blacklist.list.length);
-  for (var i in blacklist.list) {
-    this.filter.add(blacklist.list[i]);
+  this.filter = Bloom.BloomFilter.createOptimal(Blacklist.list.length);
+  for (var i in Blacklist.list) {
+    // Probably just being paranoid here.
+    if (Blacklist.list.hasOwnProperty(i)) {
+      this.filter.add(Blacklist.list[i]);
+    }
   }
   this.serve();
 };
@@ -363,8 +366,8 @@ InstaProxy.setUpRoutes = function() {
   this.app.get('/', this.sendToRepo.bind(this));
   this.app.get('/*\.(ico|png|css|html|js)', this.noContent.bind(this));
   this.app.get('/server_check_hook', this.serverCheck.bind(this));
-  this.app.get('/:user/media/', cors(), this.processCB(false).bind(this));
-  this.app.get('*', cors(), this.processCB(true).bind(this));
+  this.app.get('/:user/media/', Cors(), this.processCB(false).bind(this));
+  this.app.get('*', Cors(), this.processCB(true).bind(this));
   this.setUpFilter();
 };
 
@@ -374,8 +377,8 @@ InstaProxy.setUpRoutes = function() {
  * @this
  */
 InstaProxy.setUpApp = function() {
-  this.app = express();
-  this.app.use(responseTime());
+  this.app = Express();
+  this.app.use(ResponseTime());
   this.setUpRoutes();
 };
 

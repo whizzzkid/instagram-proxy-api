@@ -6,16 +6,17 @@ exports.list = [
   'darwinapps.com',
   'estacaodaluz.com.br',
   'flowerwholesale.com',
+  'getspiff.no',
+  'greteroede.no',
+  'kidmademodern.com',
   'leonidasoy.fi',
   'likedike.com',
   'likes.my',
+  'mbinzoz.co',
   'mplaeleicoes2017.com',
   'ofuturocomcerteza.pt',
   'potomacfloralwholesale.com',
   'pressingprive.com',
-  'weekendtrip.fr',
-  'getspiff.no',
   'skinmotion.com',
-  'kidmademodern.com',
-  'mbinzoz.co'
+  'weekendtrip.fr'
 ];
