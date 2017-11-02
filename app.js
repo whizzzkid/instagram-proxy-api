@@ -22,8 +22,7 @@ const Url = require('url');
 // App Namespace.
 const InstaProxy = {};
 
-/** @const */ InstaProxy.DEBUG_MODE = (process.env.NODE_ENV === 'dev') ?
-  true : false;
+/** @const */ InstaProxy.DEBUG_MODE = (process.env.NODE_ENV === 'dev');
 /** @const */ InstaProxy.GITHUB_REPO =
   'https://github.com/whizzzkid/instagram-reverse-proxy';
 /** @const */ InstaProxy.PROTOCOL = (!this.DEBUG_MODE) ?
@@ -70,10 +69,9 @@ InstaProxy.constructURL = function(protocol, host, path, query) {
  * @param {object} json
  * @return {object} new data as per query.
  * @this
- */
+ * */
 InstaProxy.reconstructJSON = function(request, json) {
   if ('items' in json && json.items.length > 0) {
-    var itemsAvailable = json.items.length;
 
     // Limiting number of posts as per count parameter.
     if ('count' in request.query) {
@@ -85,7 +83,7 @@ InstaProxy.reconstructJSON = function(request, json) {
       delete request.query['max_id'];
       delete request.query['min_id'];
 
-      var query = {};
+      var query;
 
       // just copying.
       query = Object.assign({}, request.query);
@@ -258,7 +256,7 @@ InstaProxy.processCB = function(checkIfAdvanceRequest) {
 /**
  * Send Response.
  * @param {object} response
- * @param {integer} statusCode
+ * @param {number} statusCode
  * @param {object} jsonMessage
  */
 InstaProxy.respond = function(response, statusCode, jsonMessage) {
