@@ -12,6 +12,9 @@ This builds over the Instagram's public API to provide more functionality and pr
 
 **Read Blog Post: [https://nishantarora.in/building-your-image-gallery-using-public-instagram-API.naml](https://nishantarora.in/building-your-image-gallery-using-public-instagram-API.naml)**
 
+## Update: Media Queries No Longer Working
+Instagram seems to have patched the media endpoints and now they resolve to 404-pages, however the advanced params still work as of now. So in short, instead of using [https://igpi.ga/whizzzkid/media/?count=3](https://igpi.ga/whizzzkid/media/?count=3) (which won't work) use [https://igpi.ga/whizzzkid/?\_\_a=1](https://igpi.ga/whizzzkid/media/?__a=1) and get the data from user.media.nodes object. I'll try figuring the solution around to this.
+1
 ## 1-Click Deploy
 
 [![Deploy](https://www.herokucdn.com/deploy/button.svg?style=flat)](https://heroku.com/deploy?template=https://github.com/whizzzkid/instagram-reverse-proxy)
