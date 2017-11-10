@@ -14,7 +14,13 @@ This builds over the Instagram's public API to provide more functionality and pr
 
 ## Update: Media Queries No Longer Working
 Instagram seems to have patched the media endpoints and now they resolve to 404-pages, however the advanced params still work as of now. So in short, instead of using [https://igpi.ga/whizzzkid/media/?count=3](https://igpi.ga/whizzzkid/media/?count=3) (which won't work) use [https://igpi.ga/whizzzkid/?\_\_a=1](https://igpi.ga/whizzzkid/media/?__a=1) and get the data from user.media.nodes object. I'll try figuring the solution around to this.
-1
+
+## Workaround in affect, this is purely experimental.
+I am trying to query instagram's GQL servers to rebuild responses. These can be accessed like: https://igpi.ga/graphql/query/?user_id=<user_id>&count=<post_count>. e.g. https://igpi.ga/graphql/query/?user_id=1606740656&count=3
+
+User id can be found here: https://www.instagram.com/whizzzkid/?__a=1 I'll be working on extracting this next.
+
+
 ## 1-Click Deploy
 
 [![Deploy](https://www.herokucdn.com/deploy/button.svg?style=flat)](https://heroku.com/deploy?template=https://github.com/whizzzkid/instagram-reverse-proxy)
