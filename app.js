@@ -194,33 +194,6 @@ InstaProxy.isNotOnBlackList = function(urlString) {
 
 
 /**
- * Verify the request from blacklist.
- * @param {Object} request
- * @param {Object} response
- * @return {Boolean} safe or not
- * @this
- */
-InstaProxy.isRefererSafe = function(request, response) {
-  var referer = request.headers.referer;
-  var isSafe = (this.DEBUG_MODE) ? (
-    referer === undefined ||
-    referer === 'undefined' ||
-    this.isNotOnBlackList(referer)
-  ) : (
-    referer !== undefined &&
-    referer !== 'undefined' &&
-    this.isNotOnBlackList(referer)
-  );
-
-  if (!isSafe) {
-    this.accessDenied(request, response);
-  }
-
-  return isSafe;
-};
-
-
-/**
  * Generate error message response object.
  * @param {String} error
  * @return {Object}
@@ -240,13 +213,23 @@ InstaProxy.errorMessageGenerator = function(error) {
 /**
  * Check if advanced params are requested.
  * @param {Object} request
+ * @param {Object} response
  * @return {Boolean}
+ * @this
  */
-InstaProxy.isAdvancedRequestValid = function(request) {
-  return ('__a' in request.query &&
+InstaProxy.isAdvancedRequestValid = function(request, response) {
+  if (!('__a' in request.query &&
     request.query['__a'] === '1' &&
     request.path !== '/'
-  );
+  )) {
+    this.respond(
+      response,
+      this.STATUS_CODES.NOT_FOUND,
+      this.errorMessageGenerator('Invalid Query Parameters.')
+    );
+    return false;
+  }
+  return true;
 };
 
 
@@ -333,8 +316,7 @@ InstaProxy.processByUserId = function(userId, request, response) {
  * @this
  */
 InstaProxy.processAdvanceParams = function(request, response) {
-  if (this.isAdvancedRequestValid(request) &&
-      this.isRefererSafe(request, response)) {
+  if (this.isAdvancedRequestValid(request, response)) {
       var callback = function(body) {
         return JSON.parse(body);
       };
@@ -386,22 +368,6 @@ InstaProxy.processLegacy = function(request, response) {
  */
 InstaProxy.respond = function(response, statusCode, jsonMessage) {
   response.status(statusCode).jsonp(jsonMessage).end();
-};
-
-
-/**
- * Access Denied.
- * @param {Object} request
- * @param {Object} response
- * @this
- */
-InstaProxy.accessDenied = function(request, response) {
-  this.respond(
-    response,
-    this.STATUS_CODES.ACCESS_DENIED,
-    this.errorMessageGenerator(
-      'Denying request from referer: ' + request.headers.referer)
-  );
 };
 
 
@@ -464,19 +430,34 @@ InstaProxy.serve = function() {
 
 
 /**
- * Bloom Filter implementation for blacklisted domains.
+ * Verify the request from blacklist.
+ * @param {Object} request
+ * @param {Object} response
+ * @param {Function} next
  * @this
  */
-InstaProxy.setUpFilter = function() {
-  this.log('Setting Up Filters');
-  this.filter = Bloom.BloomFilter.createOptimal(Blacklist.list.length);
-  for (var i in Blacklist.list) {
-    // Probably just being paranoid here.
-    if (Blacklist.list.hasOwnProperty(i)) {
-      this.filter.add(Blacklist.list[i]);
-    }
+InstaProxy.safeRefererMW = function(request, response, next) {
+  var referer = request.headers.referer;
+  var isSafe = (this.DEBUG_MODE) ? (
+    referer === undefined ||
+    referer === 'undefined' ||
+    this.isNotOnBlackList(referer)
+  ) : (
+    referer !== undefined &&
+    referer !== 'undefined' &&
+    this.isNotOnBlackList(referer)
+  );
+
+  if (!isSafe) {
+    this.respond(
+      response,
+      this.STATUS_CODES.ACCESS_DENIED,
+      this.errorMessageGenerator(
+        'Denying request from referer: ' + request.headers.referer)
+    );
+  } else {
+    next();
   }
-  this.serve();
 };
 
 
@@ -489,10 +470,44 @@ InstaProxy.setUpRoutes = function() {
   this.app.get('/', this.sendToRepo.bind(this));
   this.app.get('/*\.(ico|png|css|html|js)', this.noContent.bind(this));
   this.app.get('/server_check_hook', this.serverCheck.bind(this));
-  this.app.get('/graphql/query/', Cors(), this.processGQL.bind(this));
-  this.app.get('/:username/media/', Cors(), this.processLegacy.bind(this));
-  this.app.get('*', Cors(), this.processAdvanceParams.bind(this));
-  this.setUpFilter();
+
+  // Graph Queries
+  this.app.get(
+    '/graphql/query/',
+    this.safeRefererMW.bind(this),
+    this.processGQL.bind(this));
+
+  // Legacy requests
+  this.app.get(
+    '/:username/media/',
+    this.safeRefererMW.bind(this),
+    this.processLegacy.bind(this));
+
+    // remining, including advanced params
+  this.app.get(
+    '*',
+    this.safeRefererMW.bind(this),
+    this.processAdvanceParams.bind(this));
+
+  // serve
+  this.serve();
+};
+
+
+/**
+ * Bloom Filter implementation for blacklisted domains.
+ * @this
+ */
+InstaProxy.setUpFilter = function() {
+  this.log('Setting Up Filters');
+  this.filter = Bloom.BloomFilter.createOptimal(Blacklist.list.length);
+  for (var i in Blacklist.list) {
+    // Probably just being paranoid here.
+    if (Blacklist.list.hasOwnProperty(i)) {
+      this.filter.add(Blacklist.list[i]);
+    }
+  }
+  this.setUpRoutes();
 };
 
 
@@ -503,7 +518,8 @@ InstaProxy.setUpRoutes = function() {
 InstaProxy.setUpApp = function() {
   this.app = Express();
   this.app.use(ResponseTime());
-  this.setUpRoutes();
+  this.app.use(Cors());
+  this.setUpFilter();
 };
 
 
