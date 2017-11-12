@@ -19,11 +19,6 @@ const Https = require('https');
 const ResponseTime = require('response-time');
 const Url = require('url');
 const QueryID = '17888483320059182';
-const GraphOtions = {
-  id: '',
-  first: 3,
-  after: ''
-};
 
 // App Namespace.
 const InstaProxy = {};
@@ -42,11 +37,17 @@ const InstaProxy = {};
   NOT_FOUND: 404,
   SERVER_ERROR: 500
 };
+/** @const */ InstaProxy.GRAPH_OPTIONS = {
+  id: '',
+  first: 3,
+  after: ''
+};
+/** @const */ InstaProxy.GRAPH_PATH = '/graphql/query/';
 
 
 /**
  * A simple logging function for consistency.
- * @param {string} msg
+ * @param {String} msg
  */
 InstaProxy.log = function(msg) {
   var time = new Date();
@@ -56,11 +57,11 @@ InstaProxy.log = function(msg) {
 
 /**
  * Constructs New Url
- * @param {string} protocol
- * @param {string} host
- * @param {string} path
- * @param {string} query
- * @return {string} new url.
+ * @param {String} protocol
+ * @param {String} host
+ * @param {String} path
+ * @param {String} query
+ * @return {String} new url.
  */
 InstaProxy.constructURL = function(protocol, host, path, query) {
   return Url.format({
@@ -71,9 +72,9 @@ InstaProxy.constructURL = function(protocol, host, path, query) {
 
 /**
  * Reconstructs JSON as per query parameters.
- * @param {object} request
- * @param {object} json
- * @return {object} new data as per query.
+ * @param {Object} request
+ * @param {Object} json
+ * @return {Object} new data as per query.
  * @this
  * */
 InstaProxy.reconstructJSON = function(request, json) {
@@ -110,8 +111,10 @@ InstaProxy.reconstructJSON = function(request, json) {
 
 /**
  * Perform GQL response reconstruction
- * @param {object} request
- * @param {object} response
+ * @param {Object} request
+ * @param {Object} json
+ * @return {Object} json response
+ * @this
  */
 InstaProxy.reconstructJSONfromGQLResponse = function(request, json) {
   json = json.data.user.edge_owner_to_timeline_media;
@@ -131,18 +134,18 @@ InstaProxy.reconstructJSONfromGQLResponse = function(request, json) {
   for (var i in json.edges) {
     response.images.push(json.edges[i].node);
   }
+
   return response;
 };
 
 
 /**
  * Builds the callback function for handling Instagram response.
- * @param {object} request
- * @param {object} response
- * @return {function} callback
+ * @param {Function} callback
+ * @return {Function} callback
  * @this
  */
-InstaProxy.instagramHandlerCB = function(request, response) {
+InstaProxy.instagramFetcher = function(callback) {
   return function(serverResponse) {
     serverResponse.setEncoding('utf8');
     var body = '';
@@ -150,56 +153,35 @@ InstaProxy.instagramHandlerCB = function(request, response) {
       body += chunk;
     });
     serverResponse.on('end', function() {
-      try {
-        var json = JSON.parse(body);
-        if (!this.isAdvancedRequestValid(request)) {
-          json = this.reconstructJSON(request, json);
-        }
-        if (request.query.user_id) {
-          json = this.reconstructJSONfromGQLResponse(request, json);
-        }
-        this.respond(
-          response,
-          this.STATUS_CODES.OK,
-          json
-        );
-      } catch (error) {
-        this.respond(
-          response,
-          this.STATUS_CODES.NOT_FOUND,
-          this.errorMessageGenerator('Invalid User' + error)
-        );
-      }
-    }.bind(this));
-  }.bind(this);
+      callback(body);
+    });
+  };
 };
 
 
 /**
  * Fetches content from Instagram API.
- * @param {string} path
- * @param {string} query
- * @param {object} request
- * @param {object} response
+ * @param {String} path
+ * @param {String} query
+ * @param {Function} callback
  * @this
  */
-InstaProxy.fetchFromInstagram = function(path, query, request, response) {
+InstaProxy.fetchFromInstagram = function(path, query, callback) {
   this.log(
     'Processing [P:"' + path + '", ' +
-    'Q:"' + JSON.stringify(query) + ', ' +
-    'R:"' + request.headers.referer + '"]');
+    'Q:"' + JSON.stringify(query) + '"]');
   Https.get(
     this.constructURL(
       'https', 'www.instagram.com', path, query),
-    this.instagramHandlerCB(request, response)
+    this.instagramFetcher(callback.bind(this))
   );
 };
 
 
 /**
  * Detects if the URL is safe based on blacklist.
- * @param {string} urlString
- * @return {boolean} url safe or not.
+ * @param {String} urlString
+ * @return {Boolean} url safe or not.
  * @this
  */
 InstaProxy.isNotOnBlackList = function(urlString) {
@@ -213,33 +195,35 @@ InstaProxy.isNotOnBlackList = function(urlString) {
 
 /**
  * Verify the request from blacklist.
- * @param {object} request
- * @return {boolean} safe or not
+ * @param {Object} request
+ * @param {Object} response
+ * @return {Boolean} safe or not
  * @this
  */
-InstaProxy.isRefererSafe = function(request) {
+InstaProxy.isRefererSafe = function(request, response) {
   var referer = request.headers.referer;
-  // Undefined refer will only be allowed on Prod.
-  if (this.DEBUG_MODE) {
-    return (
-      referer === undefined ||
-      referer === 'undefined' ||
-      this.isNotOnBlackList(referer)
-    );
-  }
-
-  return (
+  var isSafe = (this.DEBUG_MODE) ? (
+    referer === undefined ||
+    referer === 'undefined' ||
+    this.isNotOnBlackList(referer)
+  ) : (
     referer !== undefined &&
     referer !== 'undefined' &&
     this.isNotOnBlackList(referer)
   );
+
+  if (!isSafe) {
+    this.accessDenied(request, response);
+  }
+
+  return isSafe;
 };
 
 
 /**
  * Generate error message response object.
- * @param {string} error
- * @return {object}
+ * @param {String} error
+ * @return {Object}
  * @this
  */
 InstaProxy.errorMessageGenerator = function(error) {
@@ -255,8 +239,8 @@ InstaProxy.errorMessageGenerator = function(error) {
 
 /**
  * Check if advanced params are requested.
- * @param {object} request
- * @return {boolean}
+ * @param {Object} request
+ * @return {Boolean}
  */
 InstaProxy.isAdvancedRequestValid = function(request) {
   return ('__a' in request.query &&
@@ -267,76 +251,138 @@ InstaProxy.isAdvancedRequestValid = function(request) {
 
 
 /**
- * Perform fetch from instagram if the referrer is safe.
- * @param {string} path
- * @param {string} query
- * @param {object} request
- * @param {object} response
+ * Generates a generic callback to be used along the wrapper.
+ * @param {Function} callback
+ * @param {Object} response
+ * @return {Function} callback
  * @this
  */
-InstaProxy.fetchIfSafe = function(path, query, request, response) {
-  if (this.isRefererSafe(request)) {
-    this.fetchFromInstagram(path, query, request, response);
-  } else {
-    this.accessDenied(request, response);
-  }
-};
-
-
-/**
- * Processing User Request. This works the same way as instagram API.
- * @param {boolean} checkIfAdvanceRequest
- * @return {function}
- * @this
- */
-InstaProxy.processCB = function(checkIfAdvanceRequest) {
-  return function(request, response) {
-    var path = '';
-    if (checkIfAdvanceRequest && this.isAdvancedRequestValid(request)) {
-      path = request.params[0];
-    } else {
-      path = '/' + request.params.user + '/media/';
-    }
-    this.fetchIfSafe(path, request.query, request, response);
+InstaProxy.generateCallBackForWrapper = function(callback, response) {
+  return function(body) {
+    this.respond(
+      response,
+      this.STATUS_CODES.OK,
+      callback(body)
+    );
   }.bind(this);
 };
 
 
 /**
- * Processes IG's GQL Queries.
- * @param {object} request
- * @param {object} response
+ * Wraps the callback in a try-catch callback.
+ * @param {Object} response
+ * @param {Function} callback
+ * @return {Function} callback
  * @this
  */
-InstaProxy.processGQL = function(request, response) {
-  // if request has user id
-  if (request.query.user_id) {
-    // Create a copy
-    var variables = Object.assign({}, GraphOtions);
-    // Assign values
-    variables.id = request.query.user_id;
-    if (request.query.count != null) {
-      variables.first = request.query.count;
+InstaProxy.callbackWrapper = function(response, callback) {
+  return function(body) {
+    try {
+      callback(body);
+    } catch (error) {
+      this.respond(
+        response,
+        this.STATUS_CODES.NOT_FOUND,
+        this.errorMessageGenerator(error.toString())
+      );
     }
-    if (request.query.cursor != null) {
-      variables.after = request.query.cursor;
-    }
-    // Generate query for IG-GQL server.
-    var query = {
-      query_id: QueryID,
-      variables: JSON.stringify(variables)
-    };
-    // Fetch
-    this.fetchIfSafe(request.path, query, request, response);
+  }.bind(this);
+};
+
+
+/**
+ * Processing users by ID from the graph
+ * @param {Number} userId
+ * @param {Object} request
+ * @param {Object} response
+ * @this
+ */
+InstaProxy.processByUserId = function(userId, request, response) {
+  // Create a copy
+  var variables = Object.assign({}, this.GRAPH_OPTIONS);
+  // Assign values
+  variables.id = userId;
+  if (request.query.count != null) {
+    variables.first = request.query.count;
+  }
+  if (request.query.cursor != null) {
+    variables.after = request.query.cursor;
+  }
+  // Generate query for IG-GQL server.
+  var query = {
+    query_id: QueryID,
+    variables: JSON.stringify(variables)
+  };
+  // Fetch
+  var callback = function(body) {
+    return this.reconstructJSONfromGQLResponse(request, JSON.parse(body));
+  }.bind(this);
+
+  this.fetchFromInstagram(
+    this.GRAPH_PATH,
+    query,
+    this.callbackWrapper(
+      response, this.generateCallBackForWrapper(callback, response)));
+};
+
+
+/**
+ * Processing User Request. This works the same way as instagram API.
+ * @param {Object} request
+ * @param {Object} response
+ * @this
+ */
+InstaProxy.processAdvanceParams = function(request, response) {
+  if (this.isAdvancedRequestValid(request) &&
+      this.isRefererSafe(request, response)) {
+      var callback = function(body) {
+        return JSON.parse(body);
+      };
+      this.fetchFromInstagram(
+        request.params[0],
+        request.query,
+        this.callbackWrapper(
+          response, this.generateCallBackForWrapper(callback, response)));
   }
 };
 
 
 /**
+ * Processes IG's GQL Queries.
+ * @param {Object} request
+ * @param {Object} response
+ * @this
+ */
+InstaProxy.processGQL = function(request, response) {
+  // if request has user id
+  if (request.query.user_id) {
+    this.processByUserId(request.query.user_id, request, response);
+  }
+};
+
+
+/**
+ * Processing legacy requests. i.e. username/media queries.
+ * @param {Object} request
+ * @param {Object} response
+ * @this
+ */
+InstaProxy.processLegacy = function(request, response) {
+  var callback = function(body) {
+    var json = JSON.parse(body);
+    this.processByUserId(json.user.id, request, response);
+  };
+  this.fetchFromInstagram(
+    '/' + request.params.username + '/',
+    { '__a': 1 },
+    this.callbackWrapper(response, callback.bind(this)));
+};
+
+/**
  * Send Response.
- * @param {object} response
+ * @param {Object} response
  * @param {number} statusCode
- * @param {object} jsonMessage
+ * @param {Object} jsonMessage
  */
 InstaProxy.respond = function(response, statusCode, jsonMessage) {
   response.status(statusCode).jsonp(jsonMessage).end();
@@ -345,8 +391,8 @@ InstaProxy.respond = function(response, statusCode, jsonMessage) {
 
 /**
  * Access Denied.
- * @param {object} request
- * @param {object} response
+ * @param {Object} request
+ * @param {Object} response
  * @this
  */
 InstaProxy.accessDenied = function(request, response) {
@@ -361,8 +407,8 @@ InstaProxy.accessDenied = function(request, response) {
 
 /**
  * Sends no content as response.
- * @param {object} request
- * @param {object} response
+ * @param {Object} request
+ * @param {Object} response
  * @this
  */
 InstaProxy.noContent = function(request, response) {
@@ -376,8 +422,8 @@ InstaProxy.noContent = function(request, response) {
 
 /**
  * Redirect to Repo.
- * @param {object} request
- * @param {object} response
+ * @param {Object} request
+ * @param {Object} response
  * @this
  */
 InstaProxy.sendToRepo = function(request, response) {
@@ -394,8 +440,8 @@ InstaProxy.sendToRepo = function(request, response) {
 
 /**
  * Server Check.
- * @param {object} request
- * @param {object} response
+ * @param {Object} request
+ * @param {Object} response
  * @this
  */
 InstaProxy.serverCheck = function(request, response) {
@@ -444,8 +490,8 @@ InstaProxy.setUpRoutes = function() {
   this.app.get('/*\.(ico|png|css|html|js)', this.noContent.bind(this));
   this.app.get('/server_check_hook', this.serverCheck.bind(this));
   this.app.get('/graphql/query/', Cors(), this.processGQL.bind(this));
-  this.app.get('/:user/media/', Cors(), this.processCB(false).bind(this));
-  this.app.get('*', Cors(), this.processCB(true).bind(this));
+  this.app.get('/:username/media/', Cors(), this.processLegacy.bind(this));
+  this.app.get('*', Cors(), this.processAdvanceParams.bind(this));
   this.setUpFilter();
 };
 
