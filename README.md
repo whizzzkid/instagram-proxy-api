@@ -107,6 +107,9 @@ User id can be found here: https://www.instagram.com/whizzzkid/?__a=1 I'll be wo
 ### Nov 12, 2017: Experimental workround seems effective.
 The workaround implemented by hacking the GQL queries seems effective. The proxy has been running smooth, so I proted the old endpoints to utilize this. It's undertstandable that this will take twice as longer. But again, it works!
 
+### Nov 14, 2017: Enabling `undefined` referrers for user testing.
+Since, IG disable `/media` urls, undefined referrers will be enabled for a while for perople to test this out.
+
 ## Issues & Pull Requests
 
 All contributers are welcome, feel free to report issues and send PRs
@@ -115,4 +118,4 @@ All contributers are welcome, feel free to report issues and send PRs
 
 Source Code: GPLv3
 
-Service hosted on https://igpi.ga or https://igapi.ga or any heroku instance used in running these services, will be free only for personal use (i.e. personal blogs/personal websites/personal portfolios). If any other entity intends to use this service for any other purpose, please send an email to **me@nishantarora.in** to discuss more about this (Please include your domain, expected traffic and purpose). Failing to do so will lead to [blacklisting from this service](https://github.com/whizzzkid/instagram-reverse-proxy/blob/master/app.js#L24).
+Service hosted on https://igpi.ga or https://igapi.ga or any heroku instance used in running these services, will be free only for personal use (i.e. personal blogs/personal websites/personal portfolios). If any other entity intends to use this service for any other purpose, please send an email to **me@nishantarora.in** to discuss more about this (Please include your domain, expected traffic and purpose). Failing to do so will lead to [blacklisting from this service](https://github.com/whizzzkid/instagram-proxy-api/blob/master/blacklist.js).

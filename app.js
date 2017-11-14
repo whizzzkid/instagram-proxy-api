@@ -7,6 +7,8 @@
  * @author me@nishantarora.in (Nishant Arora)
  */
 
+/* jshint esversion: 6 */
+/* jshint node: true */
 'use strict';
 
 // Imports.
@@ -18,12 +20,12 @@ const Express = require('express');
 const Https = require('https');
 const ResponseTime = require('response-time');
 const Url = require('url');
-const QueryID = '17888483320059182';
 
 // App Namespace.
 const InstaProxy = {};
 
 /** @const */ InstaProxy.DEBUG_MODE = (process.env.NODE_ENV === 'dev');
+/** @const */ InstaProxy.ALLOW_UNDEFINED_REFERRERS = true;
 /** @const */ InstaProxy.GITHUB_REPO =
   'https://github.com/whizzzkid/instagram-reverse-proxy';
 /** @const */ InstaProxy.PROTOCOL = (InstaProxy.DEBUG_MODE) ?
@@ -43,6 +45,7 @@ const InstaProxy = {};
   after: ''
 };
 /** @const */ InstaProxy.GRAPH_PATH = '/graphql/query/';
+/** @const */ InstaProxy.GRAPH_QUERY_ID = '17888483320059182';
 
 
 /**
@@ -67,45 +70,6 @@ InstaProxy.constructURL = function(protocol, host, path, query) {
   return Url.format({
     'protocol': protocol, 'host': host, 'pathname': path, 'query': query
   });
-};
-
-
-/**
- * Reconstructs JSON as per query parameters.
- * @param {Object} request
- * @param {Object} json
- * @return {Object} new data as per query.
- * @this
- * */
-InstaProxy.reconstructJSON = function(request, json) {
-  if ('items' in json && json.items.length > 0) {
-
-    // Limiting number of posts as per count parameter.
-    if ('count' in request.query) {
-      json.items = json.items.slice(0, parseInt(request.query.count, 10));
-    }
-
-    // We only need to show next page if we have posts available.
-    if (json.items.length > 0) {
-      delete request.query['max_id'];
-      delete request.query['min_id'];
-
-      var query;
-
-      // just copying.
-      query = Object.assign({}, request.query);
-      query['max_id'] = json.items[json.items.length - 1]['id'];
-      json['next'] = this.constructURL(
-          this.PROTOCOL, request.get('host'), request.path, query);
-
-      // just copying.
-      query = Object.assign({}, request.query);
-      query['min_id'] = json.items[0]['id'];
-      json['previous'] = this.constructURL(
-          this.PROTOCOL, request.get('host'), request.path, query);
-    }
-  }
-  return json;
 };
 
 
@@ -293,7 +257,7 @@ InstaProxy.processByUserId = function(userId, request, response) {
   }
   // Generate query for IG-GQL server.
   var query = {
-    query_id: QueryID,
+    query_id: this.GRAPH_QUERY_ID,
     variables: JSON.stringify(variables)
   };
   // Fetch
@@ -438,7 +402,7 @@ InstaProxy.serve = function() {
  */
 InstaProxy.safeRefererMW = function(request, response, next) {
   var referer = request.headers.referer;
-  var isSafe = (this.DEBUG_MODE) ? (
+  var isSafe = (this.DEBUG_MODE || this.ALLOW_UNDEFINED_REFERRERS) ? (
     referer === undefined ||
     referer === 'undefined' ||
     this.isNotOnBlackList(referer)
