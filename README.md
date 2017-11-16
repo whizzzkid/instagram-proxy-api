@@ -1,4 +1,4 @@
-# InstaReProxy
+# Instagram Proxy API: Instagram's Public Data as an API.
 
 [![Heroku](https://heroku-badge.herokuapp.com/?app=instareproxy&style=flat&root=server_check_hook)](https://igpi.ga/whizzzkid/media/?count=3)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat)](https://github.com/whizzzkid/instagram-reverse-proxy/pulls)
@@ -53,13 +53,27 @@ Each response (except for advanced parameters looks like):
 }
 ```
 
-There is a lot more info in each posts. Check them out [here](https://igpi.ga/graphql/query/?tag=yyz)
-
-
+**There is a lot more info in each posts. Check them out [here](https://igpi.ga/graphql/query/?tag=yyz)**
 
 ## Integration
+Send a jsonp request to any of the endpoints above to get instagram data. A simple example in jQuery will be:
 
-You just need to replace `http://www.instagram.com/` with `https://igpi.ga/` or `https://igapi.ga/` and everything should just work as is.
+```
+$.ajax({
+  url: "https://igpi.ga/explore/tags/yyc/media",
+  dataType: "jsonp",
+  data: { count: 3 },
+  success: function (json){
+    for(var i in json.posts) {
+      var img = document.createElement("IMG");
+      img.src = json.posts[i].display_url;
+      document.body.appendChild(img);
+    }
+  }
+});
+```
+
+**Live Demo: http://plnkr.co/edit/4oCwpbMm6p9cyJb1UWld?p=preview**
 
 ## Authentication
 
