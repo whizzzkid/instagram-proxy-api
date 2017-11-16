@@ -28,21 +28,34 @@ A user's public data on Instagram can be accessed on `https://www.instagram.com/
 
 As of now, the service is running on [https://igpi.ga/](https://igpi.ga/)(Heroku) I am not aware about limits, it's basically running on free tier. If it hits any limit, I'll have to figure that out. But the intended use is to replace `http://www.instagram.com` with `https://igpi.ga/` or `https://igapi.ga/`.
 
-## Accessing Data
+## Requests
 
-  * Getting Instagrams's data as is. The following will give you access to the same data instagram provides.
+| Data Type | End Point | Parameters | Sample URL |
+|-|-|-|-|
+| User Infor | /\<username\>/ | \_\_a=1 (advanced enabled) | https://igpi.ga/whizzzkid/?__a=1 |
+| User Posts | \<username\>/media/ | callback: \<jsonp\><br>count: \<number_of_posts\><br>cursor: \<next\> | https://igpi.ga/whizzzkid/media?count=3 |
+| User Posts<br>(Faster) | /graphql/query/ | callback: \<jsonp\><br>count: \<number_of_posts\><br>cursor: \<next\><br>*user\_id: <user\_id>| https://igpi.ga/graphql/query/?user_id=1606740656&count=3  |
+| HashTags | /explore/tags/\<hashtag\>/media/ | callback: \<jsonp\><br>count: \<number_of_posts\><br>cursor: <next> | https://igpi.ga/explore/tags/yyc/media?count=3 |
+| HashTags<br>(Convienient) | /graphql/query/ | callback: \<jsonp\><br>count: \<post_count\><br>cursor: \<next\><br>*tag: \<hashtag\>| https://igpi.ga/graphql/query/?tag=yyc&count=3|
+|||*: Required||
 
-    `https://igpi.ga/<user>/media/` or `https://igapi.ga/<user>/media/`
+## Response
 
-  * Limiting the amount of images to be sent.
+Each response (except for advanced parameters looks like):
+```
+{
+  "next": "next page url",
+  "posts": [
+    {
+    },
+    ...
+  ]
+}
+```
 
-    `https://igpi.ga/<user>/media/?count=10` or `https://igapi.ga/<user>/media/?count=10`
+There is a lot more info in each posts. Check them out [here](https://igpi.ga/graphql/query/?tag=yyz)
 
-  * Using jsonp
 
-    `https://igpi.ga/<user>/media/?callback=foo` or `https://igapi.ga/<user>/media/?callback=foo`
-
-  * Using pagination: Each response has url links to the next and previous page, you can use that to traverse through the results.
 
 ## Integration
 

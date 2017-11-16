@@ -39,13 +39,9 @@ const InstaProxy = {};
   NOT_FOUND: 404,
   SERVER_ERROR: 500
 };
-/** @const */ InstaProxy.GRAPH_OPTIONS = {
-  id: '',
-  first: 3,
-  after: ''
-};
 /** @const */ InstaProxy.GRAPH_PATH = '/graphql/query/';
-/** @const */ InstaProxy.GRAPH_QUERY_ID = '17888483320059182';
+/** @const */ InstaProxy.GRAPH_USER_QUERY_ID = '17888483320059182';
+/** @const */ InstaProxy.GRAPH_TAG_QUERY_ID = '17875800862117404';
 
 
 /**
@@ -70,36 +66,6 @@ InstaProxy.constructURL = function(protocol, host, path, query) {
   return Url.format({
     'protocol': protocol, 'host': host, 'pathname': path, 'query': query
   });
-};
-
-
-/**
- * Perform GQL response reconstruction
- * @param {Object} request
- * @param {Object} json
- * @return {Object} json response
- * @this
- */
-InstaProxy.reconstructJSONfromGQLResponse = function(request, json) {
-  json = json.data.user.edge_owner_to_timeline_media;
-  var response = {};
-  var query;
-
-  // just copying.
-  query = Object.assign({}, request.query);
-
-  if (json.page_info.has_next_page) {
-    query['cursor'] = json.page_info.end_cursor;
-    response['next'] = this.constructURL(
-      this.PROTOCOL, request.get('host'), request.path, query);
-  }
-
-  response.images = [];
-  for (var i in json.edges) {
-    response.images.push(json.edges[i].node);
-  }
-
-  return response;
 };
 
 
@@ -131,14 +97,69 @@ InstaProxy.instagramFetcher = function(callback) {
  * @this
  */
 InstaProxy.fetchFromInstagram = function(path, query, callback) {
-  this.log(
-    'Processing [P:"' + path + '", ' +
-    'Q:"' + JSON.stringify(query) + '"]');
   Https.get(
     this.constructURL(
       'https', 'www.instagram.com', path, query),
     this.instagramFetcher(callback.bind(this))
   );
+};
+
+
+/**
+ * Performs fetch from IG's GQL servers.
+ * @param {object} param
+ * @param {object} request
+ * @param {object} response
+ * @this
+ */
+InstaProxy.fetchFromInstagramGQL = function(param, request, response) {
+
+  var queryId = '';
+
+  if (param.id != null) {
+    queryId = this.GRAPH_USER_QUERY_ID;
+  }
+
+  if (param.tag_name != null) {
+    queryId = this.GRAPH_TAG_QUERY_ID;
+  }
+
+  if (queryId != '') {
+    var query = this.generateGraphQLQuery(queryId, param, request);
+
+    var callback = function(body) {
+      var json = JSON.parse(body).data;
+      if (param.id != null) {
+        json = json.user.edge_owner_to_timeline_media;
+      } else {
+        json = json.hashtag.edge_hashtag_to_media;
+      }
+      var response = {};
+      var query;
+
+      // just copying.
+      query = Object.assign({}, request.query);
+
+      if (json.page_info.has_next_page) {
+        query['cursor'] = json.page_info.end_cursor;
+        response['next'] = this.constructURL(
+          this.PROTOCOL, request.get('host'), request.path, query);
+      }
+
+      response.posts = [];
+      for (var i in json.edges) {
+        response.posts.push(json.edges[i].node);
+      }
+
+      return response;
+    }.bind(this);
+
+    this.fetchFromInstagram(
+      this.GRAPH_PATH,
+      query,
+      this.callbackWrapper(
+        response, this.generateCallBackForWrapper(callback, response)));
+  }
 };
 
 
@@ -238,38 +259,30 @@ InstaProxy.callbackWrapper = function(response, callback) {
 
 
 /**
- * Processing users by ID from the graph
- * @param {Number} userId
- * @param {Object} request
- * @param {Object} response
+ * Generates query object for graphQL.
+ * @param {string} queryId
+ * @param {object} extraParams
+ * @param {object} request
+ * @return {object} query
  * @this
  */
-InstaProxy.processByUserId = function(userId, request, response) {
-  // Create a copy
-  var variables = Object.assign({}, this.GRAPH_OPTIONS);
+InstaProxy.generateGraphQLQuery = function(queryId, extraParams, request) {
+  var variables = {};
+
   // Assign values
-  variables.id = userId;
-  if (request.query.count != null) {
-    variables.first = request.query.count;
-  }
+  variables.first = (request.query.count != null) ? request.query.count : 1;
   if (request.query.cursor != null) {
     variables.after = request.query.cursor;
   }
-  // Generate query for IG-GQL server.
-  var query = {
-    query_id: this.GRAPH_QUERY_ID,
+
+  for (var i in extraParams) {
+    variables[i] = extraParams[i];
+  }
+
+  return {
+    query_id: queryId,
     variables: JSON.stringify(variables)
   };
-  // Fetch
-  var callback = function(body) {
-    return this.reconstructJSONfromGQLResponse(request, JSON.parse(body));
-  }.bind(this);
-
-  this.fetchFromInstagram(
-    this.GRAPH_PATH,
-    query,
-    this.callbackWrapper(
-      response, this.generateCallBackForWrapper(callback, response)));
 };
 
 
@@ -302,7 +315,13 @@ InstaProxy.processAdvanceParams = function(request, response) {
 InstaProxy.processGQL = function(request, response) {
   // if request has user id
   if (request.query.user_id) {
-    this.processByUserId(request.query.user_id, request, response);
+    this.fetchFromInstagramGQL(
+      { id: request.query.user_id }, request, response);
+  }
+
+  if (request.query.tag) {
+    this.fetchFromInstagramGQL(
+      { tag_name: request.query.tag }, request, response);
   }
 };
 
@@ -316,13 +335,26 @@ InstaProxy.processGQL = function(request, response) {
 InstaProxy.processLegacy = function(request, response) {
   var callback = function(body) {
     var json = JSON.parse(body);
-    this.processByUserId(json.user.id, request, response);
+    this.fetchFromInstagramGQL({ id: json.user.id }, request, response);
   };
   this.fetchFromInstagram(
     '/' + request.params.username + '/',
     { '__a': 1 },
     this.callbackWrapper(response, callback.bind(this)));
 };
+
+
+/**
+ * Process by tagname.
+ * @param {object} request
+ * @param {object} response
+ * @this
+ */
+InstaProxy.processTagName = function(request, response) {
+  this.fetchFromInstagramGQL(
+    { tag_name: request.params.tag }, request, response);
+};
+
 
 /**
  * Send Response.
@@ -420,6 +452,10 @@ InstaProxy.safeRefererMW = function(request, response, next) {
         'Denying request from referer: ' + request.headers.referer)
     );
   } else {
+    this.log(
+      'Processing [P:"' + request.path + '", ' +
+      'Q:"' + JSON.stringify(request.query) +'", ' +
+      'R:"' + request.referer + '"]');
     next();
   }
 };
@@ -447,7 +483,13 @@ InstaProxy.setUpRoutes = function() {
     this.safeRefererMW.bind(this),
     this.processLegacy.bind(this));
 
-    // remining, including advanced params
+  // Tag Names
+  this.app.get(
+    '/explore/tags/:tag/media/',
+    this.safeRefererMW.bind(this),
+    this.processTagName.bind(this));
+
+  // remining, including advanced params
   this.app.get(
     '*',
     this.safeRefererMW.bind(this),
