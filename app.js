@@ -21,18 +21,27 @@ const Https = require('https');
 const ResponseTime = require('response-time');
 const Url = require('url');
 
-// App Namespace.
-const InstaProxy = {};
+/**
+ * App Namespace
+ * @const
+ */
+const InstaProxy = {
+  DEBUG_MODE: true || (process.env.NODE_ENV === 'dev'),
+  ERROR_LOG_SEVERITY: 2,
+  ENABLE_REFERER_CHECK: true,
+  ALLOW_UNDEFINED_REFERER: true,
+  SERVER_PORT: 3000,
+  GRAPH_PATH: '/graphql/query/',
+  GRAPH_USER_QUERY_ID: '17888483320059182',
+  GRAPH_TAG_QUERY_ID: '17875800862117404',
+  GITHUB_REPO: 'https://github.com/whizzzkid/instagram-reverse-proxy'
+};
 
-/** @const */ InstaProxy.DEBUG_MODE = (process.env.NODE_ENV === 'dev');
-/** @const */ InstaProxy.REFERER_CHECK = true;
-/** @const */ InstaProxy.ALLOW_UNDEFINED_REFERER = true;
-/** @const */ InstaProxy.GITHUB_REPO =
-  'https://github.com/whizzzkid/instagram-reverse-proxy';
-/** @const */ InstaProxy.PROTOCOL = (InstaProxy.DEBUG_MODE) ?
-  'http' : 'https';
-/** @const */ InstaProxy.SERVER_PORT = 3000;
-/** @const */ InstaProxy.STATUS_CODES = {
+/**
+ * Status Codes
+ * @enum
+ */
+InstaProxy.STATUS_CODES = {
   OK: 200,
   NO_CONTENT: 204,
   PERMANENTLY_MOVED: 301,
@@ -40,17 +49,67 @@ const InstaProxy = {};
   NOT_FOUND: 404,
   SERVER_ERROR: 500
 };
-/** @const */ InstaProxy.GRAPH_PATH = '/graphql/query/';
-/** @const */ InstaProxy.GRAPH_USER_QUERY_ID = '17888483320059182';
-/** @const */ InstaProxy.GRAPH_TAG_QUERY_ID = '17875800862117404';
+
+/**
+ * Error Messages
+ * @enum
+ */
+InstaProxy.ERROR_MESSAGES = {
+  INVALID_QUERY: {
+    code: 1,
+    sevr: 3,
+    desc: 'Invalid Query Parameters Passed.'
+  },
+  FETCH_FAILED: {
+    code: 2,
+    sevr: 0,
+    desc: 'Failed to fetch from Instagram.'
+  },
+  NOT_FOUND: {
+    code: 3,
+    sevr: 3,
+    desc: 'The resource requested was not found.'
+  },
+  REDIRECT: {
+    code: 4,
+    sevr: 4,
+    desc: 'Redirecting...'
+  },
+  REFERER_DENIED: {
+    code: 5,
+    sevr: 2,
+    desc: 'Referer was denied access.'
+  }
+};
 
 /**
  * A simple logging function for consistency.
- * @param {String} msg
+ * @param {String} mesg
  */
-InstaProxy.log = function(msg) {
+InstaProxy.log = function(mesg) {
   let time = new Date();
-  console.log('[' + time.toString() + '] ' + msg);
+  console.log('[' + time.toString() + '] ' + mesg);
+};
+
+/**
+ * Generate error message response object.
+ * @param {Object} mesg
+ * @param {String} info
+ * @return {Object} error response
+ * @this
+ */
+InstaProxy.errorMessageGenerator = function(mesg, info) {
+  var response = {
+    code: mesg.code,
+    desc: mesg.desc,
+    info: info
+  };
+
+  if (this.DEBUG_MODE && mesg.sevr <= this.ERROR_LOG_SEVERITY) {
+    this.log(JSON.stringify(response));
+  }
+
+  return response;
 };
 
 /**
@@ -81,7 +140,7 @@ InstaProxy.instagramFetcher = function(callback) {
       body += chunk;
     });
     serverResponse.on('end', function() {
-      return callback(body);
+      callback(body);
     });
   };
 };
@@ -138,7 +197,7 @@ InstaProxy.fetchFromInstagramGQL = function(param, request, response) {
       if (json.page_info.has_next_page) {
         query.cursor = json.page_info.end_cursor;
         response.next = this.constructURL(
-          this.PROTOCOL, request.get('host'), request.path, query);
+          request.protocol, request.get('host'), request.path, query);
       }
 
       response.posts = [];
@@ -172,22 +231,6 @@ InstaProxy.isNotOnBlackList = function(urlString) {
 };
 
 /**
- * Generate error message response object.
- * @param {String} error
- * @return {Object}
- * @this
- */
-InstaProxy.errorMessageGenerator = function(error) {
-  if (this.DEBUG_MODE) {
-    this.log(error);
-  }
-
-  return {
-    'error': error
-  };
-};
-
-/**
  * Check if advanced params are requested.
  * @param {Object} request
  * @param {Object} response
@@ -202,7 +245,7 @@ InstaProxy.isAdvancedRequestValid = function(request, response) {
     this.respond(
       response,
       this.STATUS_CODES.NOT_FOUND,
-      this.errorMessageGenerator('Invalid Query Parameters.')
+      this.errorMessageGenerator(this.ERROR_MESSAGES.INVALID_QUERY)
     );
     return false;
   }
@@ -236,12 +279,15 @@ InstaProxy.generateCallBackForWrapper = function(callback, response) {
 InstaProxy.callbackWrapper = function(response, callback) {
   return function(body) {
     try {
-      return callback(body);
+      callback(body);
     } catch (error) {
       this.respond(
         response,
         this.STATUS_CODES.NOT_FOUND,
-        this.errorMessageGenerator(error.toString())
+        this.errorMessageGenerator(
+          this.ERROR_MESSAGES.FETCH_FAILED,
+          'encountered: ' + error.toString()) +
+          'fetched:' + body
       );
     }
   }.bind(this);
@@ -360,7 +406,7 @@ InstaProxy.noContent = function(request, response) {
   this.respond(
     response,
     this.STATUS_CODES.NO_CONTENT,
-    this.errorMessageGenerator(request.path + ' Not Found')
+    this.errorMessageGenerator(this.ERROR_MESSAGES.NOT_FOUND, request.path)
   );
 };
 
@@ -377,7 +423,7 @@ InstaProxy.sendToRepo = function(request, response) {
   this.respond(
     response,
     this.STATUS_CODES.PERMANENTLY_MOVED,
-    this.errorMessageGenerator('Redirecting')
+    this.errorMessageGenerator(this.ERROR_MESSAGES.REDIRECT)
   );
 };
 
@@ -413,7 +459,7 @@ InstaProxy.serve = function() {
  * @this
  */
 InstaProxy.safeRefererMW = function(request, response, next) {
-  if (this.REFERER_CHECK) {
+  if (this.ENABLE_REFERER_CHECK) {
     let referer = request.headers.referer;
     let isSafe = (this.DEBUG_MODE || this.ALLOW_UNDEFINED_REFERER) ? (
         referer === undefined ||
@@ -430,7 +476,7 @@ InstaProxy.safeRefererMW = function(request, response, next) {
         response,
         this.STATUS_CODES.ACCESS_DENIED,
         this.errorMessageGenerator(
-          'Denying request from referer: ' + request.headers.referer)
+          this.ERROR_MESSAGES.REFERER_DENIED, request.headers.referer)
       );
     }
   }
@@ -450,10 +496,10 @@ InstaProxy.setUpRoutes = function() {
   this.app.get('/', this.sendToRepo.bind(this));
   this.app.get('/*.(ico|png|css|html|js)', this.noContent.bind(this));
   this.app.get('/server_check_hook', this.serverCheck.bind(this));
-  let route_map = this.getRouteMap();
-  for (let route in route_map) {
+  let routeMap = this.getRouteMap();
+  for (let route in routeMap) {
     this.app.get(
-      route, this.safeRefererMW.bind(this), route_map[route].bind(this));
+      route, this.safeRefererMW.bind(this), routeMap[route].bind(this));
   }
 
   // serve
