@@ -98,6 +98,14 @@ To run prod instance, run:
 
     $ npm run prod
 
+## Limits
+
+These apply to the service hosted on: https://igpi.ga and https://igapi.ga
+
+* post fetch limits to **25** (Look for FETCH\_COUNT\_LIMIT).
+* Also all requests with `Referer: Undefined` will be denied access.
+
+You're free to fork this repo and change flags to disable those limits.
 
 ## Inspiration
 
