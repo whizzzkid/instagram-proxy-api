@@ -287,8 +287,8 @@ InstaProxy.callbackWrapper = function (response, callback) {
         this.STATUS_CODES.NOT_FOUND,
         this.errorMessageGenerator(
           this.ERROR_MESSAGES.FETCH_FAILED,
-          'encountered: ' + error.toString()) +
-          'fetched:' + body
+          'encountered: ' + error.toString() +
+          'fetched:' + body)
       );
     }
   }.bind(this);
