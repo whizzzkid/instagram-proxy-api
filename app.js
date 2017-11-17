@@ -26,15 +26,16 @@ const Url = require('url');
  * @const
  */
 const InstaProxy = {
+  ALLOW_UNDEFINED_REFERER: true,
   DEBUG_MODE: true || (process.env.NODE_ENV === 'dev'),
   ERROR_LOG_SEVERITY: 2,
   ENABLE_REFERER_CHECK: true,
-  ALLOW_UNDEFINED_REFERER: true,
-  SERVER_PORT: 3000,
+  FETCH_COUNT_LIMIT: 25,
   GRAPH_PATH: '/graphql/query/',
   GRAPH_USER_QUERY_ID: '17888483320059182',
   GRAPH_TAG_QUERY_ID: '17875800862117404',
-  GITHUB_REPO: 'https://github.com/whizzzkid/instagram-reverse-proxy'
+  GITHUB_REPO: 'https://github.com/whizzzkid/instagram-reverse-proxy',
+  SERVER_PORT: 3000
 };
 
 /**
@@ -305,7 +306,9 @@ InstaProxy.generateGraphQLQuery = function (queryId, extraParams, request) {
   let variables = {};
 
   // Assign values
-  variables.first = (request.query.count != null) ? request.query.count : 1;
+  variables.first = (request.query.count != null) ?
+    Math.min(request.query.count, this.FETCH_COUNT_LIMIT) :
+    1;
   if (request.query.cursor != null) {
     variables.after = request.query.cursor;
   }
