@@ -87,6 +87,9 @@ NO AUTH REQUIRED, that's the best part, you can access all of instagram's public
     # The following will always return nothing for private users.
     https://igpi.ga/<private_user>/media/
 
+## Rate Limits
+Since I discovered a lot of crawlers were using this API to scrape data off instagram, I had to rate limit the requests. The prod APIs get penalized by Instagram if there are too many requests from the heroku instance. To make sure not everyone sufferes because of this, I made sure that multiple requests are rate-limited so that not everyone is penalized. However if you are developing your app locally and want to test it which would involve multiple refreshes and lot of fetching from prod then it's a good idea to run the local instance of the API and use the local address for your dev purposes. Change the instance to prod when deploying.
+
 ## Running on local
 
 Clone the repo and change to the cloned directory. Run:
