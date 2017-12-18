@@ -87,18 +87,17 @@ NO AUTH REQUIRED, that's the best part, you can access all of instagram's public
     # The following will always return nothing for private users.
     https://igpi.ga/<private_user>/media/
 
-## Running on local
+## Wiki Articles
 
-Clone the repo and change to the cloned directory. Run:
+* [Supported Request Types](https://github.com/whizzzkid/instagram-proxy-api/wiki/Supported-Requests-Type)
+* [Developing your app using the local instance of Instagram Proxy API](https://github.com/whizzzkid/instagram-proxy-api/wiki/Developing-on-Local)
+* [Accessing video URLs for video posts](https://github.com/whizzzkid/instagram-proxy-api/wiki/Accessing-Video-URLs-for-video-posts.)
+* [Getting location data for Instagram posts](https://github.com/whizzzkid/instagram-proxy-api/wiki/Getting-Post-Location-Data)
 
-    $ npm install
-    $ npm run dev
+## Rate Limits
+Since I discovered a lot of crawlers were using this API to scrape data off instagram, I had to rate limit the requests. The prod APIs get penalized by Instagram if there are too many requests from the heroku instance. To make sure not everyone sufferes because of this, I made sure that multiple requests are rate-limited so that not everyone is penalized. However if you are developing your app locally and want to test it which would involve multiple refreshes and lot of fetching from prod then it's a good idea to run the local instance of the API and use the local address for your dev purposes. Change the instance to prod when deploying.
 
-To run prod instance, run:
-
-    $ npm run prod
-
-## Limits
+## Fetch Limits
 
 These apply to the service hosted on: https://igpi.ga and https://igapi.ga
 
