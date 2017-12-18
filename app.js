@@ -169,14 +169,14 @@ InstaProxy.fetchFromInstagram = function (path, query, callback) {
  * @this
  */
 InstaProxy.fetchFromInstagramGQL = function (param, request, response) {
-  let queryId = '';
-
+  let queryId;
+  
   if (param.id != null) {
     queryId = this.GRAPH_USER_QUERY_ID;
-  }
-
-  if (param.tag_name != null) {
+  } else if (param.tag_name != null) {
     queryId = this.GRAPH_TAG_QUERY_ID;
+  } else {
+    queryId = '';
   }
 
   if (queryId !== '') {

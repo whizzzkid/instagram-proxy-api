@@ -8,15 +8,18 @@ exports.list = [
   'flowerwholesale.com',
   'getspiff.no',
   'greteroede.no',
+  'grolondon.co.uk',
   'kidmademodern.com',
   'leonidasoy.fi',
   'likedike.com',
   'likes.my',
+  'lsvillas.com.br',
   'mbinzoz.co',
   'mplaeleicoes2017.com',
   'ofuturocomcerteza.pt',
   'potomacfloralwholesale.com',
   'pressingprive.com',
+  'sanjuanhoteis.com.br',
   'skinmotion.com',
   'weekendtrip.fr'
 ];
