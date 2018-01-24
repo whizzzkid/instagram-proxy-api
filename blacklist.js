@@ -1,14 +1,18 @@
 exports.list = [
+  'ace-tee.com',
   'batalhatemfuturoautarquicas2017.pt',
   'bloodandco.com',
   'bnk48.com',
   'centraldacorrida.com.br',
+  'danyiom.com',
   'darwinapps.com',
   'estacaodaluz.com.br',
   'flowerwholesale.com',
   'getspiff.no',
   'greteroede.no',
   'grolondon.co.uk',
+  'jumpseller.com',
+  'kaributienda.cl',
   'kidmademodern.com',
   'leonidasoy.fi',
   'likedike.com',
@@ -20,6 +24,9 @@ exports.list = [
   'potomacfloralwholesale.com',
   'pressingprive.com',
   'sanjuanhoteis.com.br',
+  'selig.eu',
   'skinmotion.com',
-  'weekendtrip.fr'
+  'sonymusic.de',
+  'weekendtrip.fr',
+  'xpodisainshop.cl'
 ];
