@@ -170,7 +170,7 @@ InstaProxy.fetchFromInstagram = function (path, query, callback) {
  */
 InstaProxy.fetchFromInstagramGQL = function (param, request, response) {
   let queryId;
-  
+
   if (param.id != null) {
     queryId = this.GRAPH_USER_QUERY_ID;
   } else if (param.tag_name != null) {
@@ -370,7 +370,7 @@ InstaProxy.processGQL = function (request, response) {
 InstaProxy.processLegacy = function (request, response) {
   let callback = function (body) {
     let json = JSON.parse(body);
-    this.fetchFromInstagramGQL({ id: json.user.id }, request, response);
+    this.fetchFromInstagramGQL({ id: json.graphql.user.id }, request, response);
   };
   this.fetchFromInstagram(
     '/' + request.params.username + '/',
