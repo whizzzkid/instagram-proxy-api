@@ -442,7 +442,7 @@ InstaProxy.serverCheck = function (request, response) {
     this.STATUS_CODES.OK,
     {
       ok: true,
-      env: process.env
+      env: process.env.APP_NAME
     }
   );
 };
