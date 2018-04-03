@@ -440,7 +440,10 @@ InstaProxy.serverCheck = function (request, response) {
   this.respond(
     response,
     this.STATUS_CODES.OK,
-    { ok: true }
+    {
+      ok: true,
+      env: process.env
+    }
   );
 };
 
