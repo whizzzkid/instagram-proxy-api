@@ -1,3 +1,8 @@
+# This Project Was Archieved on April 24, 2018. [Reason](https://github.com/whizzzkid/instagram-proxy-api/issues/28).
+
+All endpoints/deployment pipelines should be assumed dead from this point forward.
+
+
 # Instagram Proxy API: Instagram's Public Data as an API.
 
 [![Heroku](https://heroku-badge.herokuapp.com/?app=instareproxy&style=flat&root=server_check_hook)](https://igpi.ga/whizzzkid/media/?count=3)
